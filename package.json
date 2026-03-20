@@ -19,7 +19,8 @@
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "fuse.js": "^7.0.0",
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "@supabase/supabase-js": "^2.49.4"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.2.0",
