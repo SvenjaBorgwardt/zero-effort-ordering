@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY;
-const VOXTRAL_MODEL = 'voxtral-mini-2602';
+const VOXTRAL_MODEL = 'voxtral-mini-latest';
 const API_TIMEOUT = 30000; // 30 Sekunden für Audio
 
 // Demo-Transkription für Mock-Modus – enthält Smalltalk + echte Bestellung
