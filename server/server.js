@@ -24,7 +24,11 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' })); // Groß genug für Base64-Fotos
 
 // === Datei-Pfade ===
-const bestellungenPath = join(__dirname, 'data', 'bestellungen.json');
+// Auf Vercel (serverless) ist nur /tmp beschreibbar
+const isServerless = !!(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+const bestellungenPath = isServerless
+  ? '/tmp/bestellungen.json'
+  : join(__dirname, 'data', 'bestellungen.json');
 const demoBestellungenPath = join(__dirname, 'data', 'demo-bestellungen.json');
 const filialenPath = join(__dirname, 'data', 'filialen.json');
 
@@ -373,29 +377,34 @@ app.get('/api/health', async (req, res) => {
   });
 });
 
-// ============================================================
-// SERVER START
-// ============================================================
-app.listen(PORT, () => {
-  console.log('');
-  console.log('  ═══════════════════════════════════════');
-  console.log('  🥐 [APPNAME] Backend Server');
-  console.log(`  ═══════════════════════════════════════`);
-  console.log(`  🌐 Port:      ${PORT}`);
-  console.log(`  🤖 Mock-Mode: ${getMockMode()}`);
-  console.log(`  📁 Daten:     ${join(__dirname, 'data')}`);
-  console.log('  ═══════════════════════════════════════');
-  console.log('');
+// App exportieren (für Vercel Serverless Function)
+export default app;
 
-  initDemoBestellungen();
-
-  // API-Verbindung testen
-  testeVerbindung().then(ok => {
-    if (ok) {
-      console.log('  ✅ Mistral API: Verbindung steht');
-    } else {
-      console.log('  ⚠️  Mistral API: Nicht erreichbar (Mock-Modus verfügbar)');
-    }
+// ============================================================
+// SERVER START (nur wenn direkt aufgerufen, nicht wenn importiert)
+// ============================================================
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  app.listen(PORT, () => {
     console.log('');
+    console.log('  ═══════════════════════════════════════');
+    console.log('  🥐 [APPNAME] Backend Server');
+    console.log(`  ═══════════════════════════════════════`);
+    console.log(`  🌐 Port:      ${PORT}`);
+    console.log(`  🤖 Mock-Mode: ${getMockMode()}`);
+    console.log(`  📁 Daten:     ${join(__dirname, 'data')}`);
+    console.log('  ═══════════════════════════════════════');
+    console.log('');
+
+    initDemoBestellungen();
+
+    // API-Verbindung testen
+    testeVerbindung().then(ok => {
+      if (ok) {
+        console.log('  ✅ Mistral API: Verbindung steht');
+      } else {
+        console.log('  ⚠️  Mistral API: Nicht erreichbar (Mock-Modus verfügbar)');
+      }
+      console.log('');
+    });
   });
-});
+}
