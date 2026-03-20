@@ -1,0 +1,410 @@
+{
+  "backwaren": [
+    {
+      "id": "weizenbroetchen",
+      "name": "Weizenbrötchen",
+      "aliase": ["Brötchen", "Weizenbrötchen", "Schrippen", "Semmeln", "Weckle", "WB"],
+      "einheit": "Stück",
+      "typ": "teigling",
+      "preis": 0.45,
+      "typische_menge": {
+        "min": 30,
+        "max": 150,
+        "einheit": "Stück"
+      },
+      "kategorie": "Brötchen"
+    },
+    {
+      "id": "mohnbroetchen",
+      "name": "Mohnbrötchen",
+      "aliase": ["Mohnbrötchen", "Mohn-B", "Brötchen Mohn"],
+      "einheit": "Stück",
+      "typ": "teigling",
+      "preis": 0.50,
+      "typische_menge": {
+        "min": 10,
+        "max": 60,
+        "einheit": "Stück"
+      },
+      "kategorie": "Brötchen"
+    },
+    {
+      "id": "sesambroetchen",
+      "name": "Sesambrötchen",
+      "aliase": ["Sesambrötchen", "Sesam-B", "Brötchen Sesam"],
+      "einheit": "Stück",
+      "typ": "teigling",
+      "preis": 0.50,
+      "typische_menge": {
+        "min": 10,
+        "max": 60,
+        "einheit": "Stück"
+      },
+      "kategorie": "Brötchen"
+    },
+    {
+      "id": "koernerbroetchen",
+      "name": "Körnerbrötchen",
+      "aliase": ["Körnerbrötchen", "Körner-B", "Mehrkornbrötchen", "Vollkornbrötchen", "KB"],
+      "einheit": "Stück",
+      "typ": "teigling",
+      "preis": 0.55,
+      "typische_menge": {
+        "min": 15,
+        "max": 80,
+        "einheit": "Stück"
+      },
+      "kategorie": "Brötchen"
+    },
+    {
+      "id": "laugenbrezel",
+      "name": "Laugenbrezel",
+      "aliase": ["Brezel", "Laugenbrezel", "Brezn", "Breze"],
+      "einheit": "Stück",
+      "typ": "teigling",
+      "preis": 0.95,
+      "typische_menge": {
+        "min": 10,
+        "max": 60,
+        "einheit": "Stück"
+      },
+      "kategorie": "Laugengebäck"
+    },
+    {
+      "id": "laugenstange",
+      "name": "Laugenstange",
+      "aliase": ["Laugenstange", "Laugenstangen", "LS"],
+      "einheit": "Stück",
+      "typ": "teigling",
+      "preis": 0.85,
+      "typische_menge": {
+        "min": 10,
+        "max": 50,
+        "einheit": "Stück"
+      },
+      "kategorie": "Laugengebäck"
+    },
+    {
+      "id": "croissant",
+      "name": "Buttercroissant",
+      "aliase": ["Croissant", "Buttercroissant", "Hörnchen", "Croi"],
+      "einheit": "Stück",
+      "typ": "teigling",
+      "preis": 1.80,
+      "typische_menge": {
+        "min": 10,
+        "max": 50,
+        "einheit": "Stück"
+      },
+      "kategorie": "Feingebäck"
+    },
+    {
+      "id": "rosinenschnecke",
+      "name": "Rosinenschnecke",
+      "aliase": ["Rosinenschnecke", "Rosinenschn.", "Schnecke Rosine", "Schnecke", "RS"],
+      "einheit": "Stück",
+      "typ": "teigling",
+      "preis": 1.60,
+      "typische_menge": {
+        "min": 5,
+        "max": 30,
+        "einheit": "Stück"
+      },
+      "kategorie": "Feingebäck"
+    },
+    {
+      "id": "nussschnecke",
+      "name": "Nussschnecke",
+      "aliase": ["Nussschnecke", "Nuss-Schnecke", "NS"],
+      "einheit": "Stück",
+      "typ": "teigling",
+      "preis": 1.60,
+      "typische_menge": {
+        "min": 5,
+        "max": 25,
+        "einheit": "Stück"
+      },
+      "kategorie": "Feingebäck"
+    },
+    {
+      "id": "apfeltasche",
+      "name": "Apfeltasche",
+      "aliase": ["Apfeltasche", "Apfeltaschen", "AT"],
+      "einheit": "Stück",
+      "typ": "teigling",
+      "preis": 1.70,
+      "typische_menge": {
+        "min": 5,
+        "max": 25,
+        "einheit": "Stück"
+      },
+      "kategorie": "Feingebäck"
+    },
+    {
+      "id": "berliner",
+      "name": "Berliner (Marmelade)",
+      "aliase": ["Berliner", "Krapfen", "Pfannkuchen", "Kreppel"],
+      "einheit": "Stück",
+      "typ": "teigling",
+      "preis": 1.40,
+      "typische_menge": {
+        "min": 10,
+        "max": 40,
+        "einheit": "Stück"
+      },
+      "kategorie": "Feingebäck"
+    },
+    {
+      "id": "mischbrot",
+      "name": "Mischbrot (Weizen/Roggen)",
+      "aliase": ["Mischbrot", "Graubrot", "Hausbrot", "MB"],
+      "einheit": "Stück",
+      "typ": "fertig",
+      "preis": 3.90,
+      "typische_menge": {
+        "min": 5,
+        "max": 25,
+        "einheit": "Stück"
+      },
+      "kategorie": "Brot"
+    },
+    {
+      "id": "dinkelbrot",
+      "name": "Dinkelvollkornbrot",
+      "aliase": ["Dinkelbrot", "Dinkel VK", "Dinkel", "DVK"],
+      "einheit": "Stück",
+      "typ": "fertig",
+      "preis": 4.50,
+      "typische_menge": {
+        "min": 3,
+        "max": 15,
+        "einheit": "Stück"
+      },
+      "kategorie": "Brot"
+    },
+    {
+      "id": "krustenbrot",
+      "name": "Krustenbrot",
+      "aliase": ["Krustenbrot", "Kruste", "Bauernkruste"],
+      "einheit": "Stück",
+      "typ": "fertig",
+      "preis": 4.20,
+      "typische_menge": {
+        "min": 3,
+        "max": 15,
+        "einheit": "Stück"
+      },
+      "kategorie": "Brot"
+    },
+    {
+      "id": "roggenbrot",
+      "name": "Roggenvollkornbrot",
+      "aliase": ["Roggenbrot", "Roggen VK", "Schwarzbrot", "RVK"],
+      "einheit": "Stück",
+      "typ": "fertig",
+      "preis": 4.30,
+      "typische_menge": {
+        "min": 3,
+        "max": 12,
+        "einheit": "Stück"
+      },
+      "kategorie": "Brot"
+    },
+    {
+      "id": "toastbrot",
+      "name": "Toastbrot",
+      "aliase": ["Toast", "Toastbrot", "Sandwich"],
+      "einheit": "Stück",
+      "typ": "fertig",
+      "preis": 2.90,
+      "typische_menge": {
+        "min": 3,
+        "max": 15,
+        "einheit": "Stück"
+      },
+      "kategorie": "Brot"
+    },
+    {
+      "id": "erdbeertorte",
+      "name": "Erdbeertorte",
+      "aliase": ["Erdbeertorte", "Erdbeer", "Torte Erdbeere"],
+      "einheit": "Stück",
+      "typ": "fertig",
+      "preis": 24.90,
+      "typische_menge": {
+        "min": 1,
+        "max": 5,
+        "einheit": "Stück"
+      },
+      "kategorie": "Torten & Kuchen"
+    },
+    {
+      "id": "kaesekuchen",
+      "name": "Käsekuchen",
+      "aliase": ["Käsekuchen", "Käse-K", "KK"],
+      "einheit": "Stück",
+      "typ": "fertig",
+      "preis": 22.90,
+      "typische_menge": {
+        "min": 1,
+        "max": 5,
+        "einheit": "Stück"
+      },
+      "kategorie": "Torten & Kuchen"
+    },
+    {
+      "id": "marmorkuchen",
+      "name": "Marmorkuchen",
+      "aliase": ["Marmorkuchen", "Marmor", "Rührkuchen"],
+      "einheit": "Stück",
+      "typ": "fertig",
+      "preis": 19.90,
+      "typische_menge": {
+        "min": 1,
+        "max": 4,
+        "einheit": "Stück"
+      },
+      "kategorie": "Torten & Kuchen"
+    },
+    {
+      "id": "bienenstich",
+      "name": "Bienenstich",
+      "aliase": ["Bienenstich", "BS"],
+      "einheit": "Stück",
+      "typ": "fertig",
+      "preis": 21.90,
+      "typische_menge": {
+        "min": 1,
+        "max": 4,
+        "einheit": "Stück"
+      },
+      "kategorie": "Torten & Kuchen"
+    },
+    {
+      "id": "aufschnitt-sortiment",
+      "name": "Aufschnitt-Sortiment (gemischt)",
+      "aliase": ["Aufschnitt", "Wurst", "Aufschnitt-Sort.", "Belegware"],
+      "einheit": "Packung",
+      "typ": "fertig",
+      "preis": 4.50,
+      "typische_menge": {
+        "min": 1,
+        "max": 5,
+        "einheit": "Packung"
+      },
+      "kategorie": "Belegware"
+    },
+    {
+      "id": "kaese-sortiment",
+      "name": "Käse-Sortiment (Scheiben)",
+      "aliase": ["Käse", "Käseaufschnitt", "Käse-Sort."],
+      "einheit": "Packung",
+      "typ": "fertig",
+      "preis": 3.90,
+      "typische_menge": {
+        "min": 1,
+        "max": 5,
+        "einheit": "Packung"
+      },
+      "kategorie": "Belegware"
+    }
+  ],
+  "rohstoffe": [
+    {
+      "id": "wm-550",
+      "name": "Weizenmehl Typ 550",
+      "aliase": ["WM 550", "WM550", "WM5", "Weizen 550", "Weizenmehl", "Mehl 550"],
+      "einheit": "Sack (25kg)",
+      "typische_menge": {
+        "min": 2,
+        "max": 10,
+        "einheit": "Sack"
+      },
+      "kategorie": "Mehl"
+    },
+    {
+      "id": "rm-1150",
+      "name": "Roggenmehl Typ 1150",
+      "aliase": ["RM 1150", "RM1150", "RM11", "Roggen 1150", "Roggenmehl"],
+      "einheit": "Sack (25kg)",
+      "typische_menge": {
+        "min": 1,
+        "max": 8,
+        "einheit": "Sack"
+      },
+      "kategorie": "Mehl"
+    },
+    {
+      "id": "hefe",
+      "name": "Frischhefe",
+      "aliase": ["Hefe", "Hese", "Frischhefe", "Backhefe"],
+      "einheit": "Würfel (42g)",
+      "typische_menge": {
+        "min": 5,
+        "max": 40,
+        "einheit": "Würfel"
+      },
+      "kategorie": "Triebmittel"
+    },
+    {
+      "id": "butter",
+      "name": "Butter",
+      "aliase": ["Butter", "Deutsche Markenbutter", "DB"],
+      "einheit": "Block (250g)",
+      "typische_menge": {
+        "min": 5,
+        "max": 30,
+        "einheit": "Block"
+      },
+      "kategorie": "Milchprodukte"
+    },
+    {
+      "id": "eier",
+      "name": "Eier (Freiland, Größe M)",
+      "aliase": ["Eier", "Ei", "Freilandeier"],
+      "einheit": "Karton (360 Stück)",
+      "typische_menge": {
+        "min": 1,
+        "max": 5,
+        "einheit": "Karton"
+      },
+      "kategorie": "Eier"
+    },
+    {
+      "id": "sahne",
+      "name": "Schlagsahne",
+      "aliase": ["Sahne", "Schlagsahne", "Rahm"],
+      "einheit": "Packung (1L)",
+      "typische_menge": {
+        "min": 2,
+        "max": 15,
+        "einheit": "Packung"
+      },
+      "kategorie": "Milchprodukte"
+    },
+    {
+      "id": "zucker",
+      "name": "Zucker (fein)",
+      "aliase": ["Zucker", "Feinzucker", "Kristallzucker"],
+      "einheit": "Sack (25kg)",
+      "typische_menge": {
+        "min": 1,
+        "max": 4,
+        "einheit": "Sack"
+      },
+      "kategorie": "Zucker"
+    },
+    {
+      "id": "margarine",
+      "name": "Backmargarine",
+      "aliase": ["Margarine", "Marg", "Backmargarine", "Ziehfett"],
+      "einheit": "Platte (2,5kg)",
+      "typische_menge": {
+        "min": 2,
+        "max": 10,
+        "einheit": "Platte"
+      },
+      "kategorie": "Fette"
+    }
+  ]
+}

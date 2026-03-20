@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Environment variables (API keys!)
+.env
+.env.local
+.env.*.local
+
+# Build output
+dist/
+
+# Vercel
+.vercel/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Runtime data
+server/data/bestellungen.json
+
+# Claude Code worktrees
+.claude/

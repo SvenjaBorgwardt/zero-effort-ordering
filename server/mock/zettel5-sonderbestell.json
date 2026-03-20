@@ -1,0 +1,65 @@
+{
+  "mock": true,
+  "mock_quelle": "zettel5-sonderbestell",
+  "positionen": [
+    {
+      "produkt": "Weizenbrötchen",
+      "menge": 60,
+      "einheit": "Stück",
+      "original_text": "60 Weizenbrötchen",
+      "konfidenz": 0.97
+    },
+    {
+      "produkt": "Mohnbrötchen",
+      "menge": 25,
+      "einheit": "Stück",
+      "original_text": "25 Mohnbrötchen",
+      "konfidenz": 0.96
+    },
+    {
+      "produkt": "Laugenstange",
+      "menge": 15,
+      "einheit": "Stück",
+      "original_text": "15 Laugenstangen",
+      "konfidenz": 0.95
+    },
+    {
+      "produkt": "Rosinenschnecke",
+      "menge": 10,
+      "einheit": "Stück",
+      "original_text": "10 Rosinenschnecken",
+      "konfidenz": 0.94
+    },
+    {
+      "produkt": "Krustenbrot",
+      "menge": 5,
+      "einheit": "Stück",
+      "original_text": "5 Krustenbrot",
+      "konfidenz": 0.93
+    },
+    {
+      "produkt": "Mischbrot",
+      "menge": 3,
+      "einheit": "Stück",
+      "original_text": "3 Mischbrot",
+      "konfidenz": 0.92
+    }
+  ],
+  "sonderbestellungen": [
+    {
+      "produkt": "Erdbeertorte",
+      "menge": 1,
+      "einheit": "Stück",
+      "lieferdatum": "2026-03-22",
+      "kunde": "Frau Müller",
+      "original_text": "1 Erdbeertorte Sonderbestell. Fr 22.3. Kundin Frau Müller, Abholung 14 Uhr",
+      "konfidenz": 0.88
+    }
+  ],
+  "kommentar": "Bitte Lieferung erst ab 6 Uhr! LG Maria",
+  "meta": {
+    "filiale": "Nippes",
+    "datum": null,
+    "unlesbare_stellen": []
+  }
+}

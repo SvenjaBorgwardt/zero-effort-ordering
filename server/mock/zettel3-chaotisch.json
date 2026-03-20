@@ -1,0 +1,50 @@
+{
+  "mock": true,
+  "mock_quelle": "zettel3-chaotisch",
+  "positionen": [
+    {
+      "produkt": "Weizenbrötchen",
+      "menge": 80,
+      "einheit": "Stück",
+      "original_text": "~~50~~ 80 Brötchen",
+      "konfidenz": 0.88
+    },
+    {
+      "produkt": "Laugenbrezel",
+      "menge": 20,
+      "einheit": "Stück",
+      "original_text": "Brezeln 20",
+      "konfidenz": 0.90
+    },
+    {
+      "produkt": "Nussschnecke",
+      "menge": 10,
+      "einheit": "Stück",
+      "original_text": "Schnecken Rosine → nein Nuss! 10",
+      "konfidenz": 0.75
+    },
+    {
+      "produkt": "Buttercroissant",
+      "menge": 1,
+      "einheit": "Stück",
+      "original_text": "Croissant",
+      "konfidenz": 0.60
+    },
+    {
+      "produkt": "Dinkelvollkornbrot",
+      "menge": 5,
+      "einheit": "Stück",
+      "original_text": "Dinkelbrot 5",
+      "konfidenz": 0.92
+    }
+  ],
+  "sonderbestellungen": [],
+  "kommentar": "",
+  "meta": {
+    "filiale": null,
+    "datum": null,
+    "unlesbare_stellen": [
+      "Menge bei Croissant nicht angegeben, geschätzt als 1"
+    ]
+  }
+}
