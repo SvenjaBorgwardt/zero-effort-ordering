@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { erkenneBild, testeVerbindung } from './services/mistralService.js';
@@ -10,6 +10,7 @@ import { pruefeAllePositionen } from './services/plausiCheck.js';
 import { getMockMode, getMockResponse } from './mock/mock-controller.js';
 import { transkribiere, testeVoxtralVerbindung } from './services/voxtralService.js';
 import { parseBestellung } from './services/sprachParser.js';
+import { ladeBestellungen, speichereBestellung, zaehleFilialBestellungen } from './services/supabaseService.js';
 
 dotenv.config();
 
@@ -23,42 +24,12 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json({ limit: '10mb' })); // Groß genug für Base64-Fotos
 
-// === Datei-Pfade ===
-// Auf Vercel (serverless) ist nur /tmp beschreibbar
-const isServerless = !!(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
-const bestellungenPath = isServerless
-  ? '/tmp/bestellungen.json'
-  : join(__dirname, 'data', 'bestellungen.json');
-const demoBestellungenPath = join(__dirname, 'data', 'demo-bestellungen.json');
+// === Stammdaten ===
 const filialenPath = join(__dirname, 'data', 'filialen.json');
-
-// === Hilfsfunktionen ===
-function ladeBestellungen() {
-  try {
-    const data = readFileSync(bestellungenPath, 'utf-8');
-    return JSON.parse(data);
-  } catch {
-    return [];
-  }
-}
-
-function speichereBestellungen(bestellungen) {
-  writeFileSync(bestellungenPath, JSON.stringify(bestellungen, null, 2), 'utf-8');
-}
 
 function ladeFilialen() {
   const data = readFileSync(filialenPath, 'utf-8');
   return JSON.parse(data).filialen;
-}
-
-// Beim Start: Demo-Bestellungen laden falls bestellungen.json leer ist
-function initDemoBestellungen() {
-  const bestellungen = ladeBestellungen();
-  if (bestellungen.length === 0 && existsSync(demoBestellungenPath)) {
-    const demo = JSON.parse(readFileSync(demoBestellungenPath, 'utf-8'));
-    speichereBestellungen(demo);
-    console.log(`  📦 ${demo.length} Demo-Bestellungen geladen`);
-  }
 }
 
 // ============================================================
@@ -144,148 +115,153 @@ app.post('/api/erkennung', async (req, res) => {
 // ============================================================
 // BESTELLUNGEN
 // ============================================================
-app.post('/api/bestellung', (req, res) => {
+app.post('/api/bestellung', async (req, res) => {
   const { filiale_id, filiale_name, positionen, sonderbestellungen, kommentar, foto_base64 } = req.body;
 
   if (!filiale_id || !positionen) {
     return res.status(400).json({ error: 'filiale_id und positionen erforderlich' });
   }
 
-  const bestellungen = ladeBestellungen();
-  const heute = new Date().toISOString().split('T')[0];
-  const filialeBestellungen = bestellungen.filter(b =>
-    b.filiale_id === filiale_id && b.zeitstempel.startsWith(heute)
-  );
+  try {
+    const heute = new Date().toISOString().split('T')[0];
+    const anzahl = await zaehleFilialBestellungen(filiale_id, heute);
 
-  const neueBestellung = {
-    id: `best-${heute.replace(/-/g, '')}-${filiale_id}-${String(filialeBestellungen.length + 1).padStart(3, '0')}`,
-    filiale_id,
-    filiale_name: filiale_name || filiale_id,
-    zeitstempel: new Date().toISOString(),
-    status: 'bestaetigt',
-    positionen,
-    sonderbestellungen: sonderbestellungen || [],
-    kommentar: kommentar || '',
-    foto_base64: foto_base64 ? '[gespeichert]' : null, // Foto nicht nochmal speichern, nur Marker
-    erkennungs_meta: {
-      modell: 'mistral-large-latest'
-    }
-  };
+    const neueBestellung = {
+      id: `best-${heute.replace(/-/g, '')}-${filiale_id}-${String(anzahl + 1).padStart(3, '0')}`,
+      filiale_id,
+      filiale_name: filiale_name || filiale_id,
+      zeitstempel: new Date().toISOString(),
+      status: 'bestaetigt',
+      positionen,
+      sonderbestellungen: sonderbestellungen || [],
+      kommentar: kommentar || '',
+      foto_base64: foto_base64 ? '[gespeichert]' : null,
+      erkennungs_meta: { modell: 'mistral-large-latest' },
+      quelle: 'foto'
+    };
 
-  bestellungen.push(neueBestellung);
-  speichereBestellungen(bestellungen);
-
-  console.log(`  📝 Neue Bestellung: ${neueBestellung.id} von ${filiale_name}`);
-  res.json({ success: true, bestellung_id: neueBestellung.id });
+    await speichereBestellung(neueBestellung);
+    console.log(`  📝 Neue Bestellung: ${neueBestellung.id} von ${filiale_name}`);
+    res.json({ success: true, bestellung_id: neueBestellung.id });
+  } catch (error) {
+    console.error(`  ❌ Bestellungsfehler: ${error.message}`);
+    res.status(500).json({ success: false, error: error.message });
+  }
 });
 
-app.get('/api/bestellungen', (req, res) => {
-  const { datum, filiale } = req.query;
-  let bestellungen = ladeBestellungen();
-
-  if (datum) {
-    bestellungen = bestellungen.filter(b => b.zeitstempel.startsWith(datum));
+app.get('/api/bestellungen', async (req, res) => {
+  try {
+    const { datum, filiale } = req.query;
+    const bestellungen = await ladeBestellungen({ datum, filiale_id: filiale });
+    res.json(bestellungen);
+  } catch (error) {
+    console.error(`  ❌ Fehler beim Laden der Bestellungen: ${error.message}`);
+    res.status(500).json({ success: false, error: error.message });
   }
-  if (filiale) {
-    bestellungen = bestellungen.filter(b => b.filiale_id === filiale);
-  }
-
-  res.json(bestellungen);
 });
 
 // ============================================================
 // DASHBOARD-ENDPOINTS
 // ============================================================
-app.get('/api/status', (req, res) => {
-  const datum = req.query.datum || new Date().toISOString().split('T')[0];
-  const bestellungen = ladeBestellungen().filter(b => b.zeitstempel.startsWith(datum));
-  const filialen = ladeFilialen();
+app.get('/api/status', async (req, res) => {
+  try {
+    const datum = req.query.datum || new Date().toISOString().split('T')[0];
+    const bestellungen = await ladeBestellungen({ datum });
+    const filialen = ladeFilialen();
 
-  const filialenMitBestellung = new Set(bestellungen.map(b => b.filiale_id));
+    const filialenMitBestellung = new Set(bestellungen.map(b => b.filiale_id));
 
-  const status = filialen.map(f => ({
-    ...f,
-    hat_bestellt: filialenMitBestellung.has(f.id),
-    anzahl_bestellungen: bestellungen.filter(b => b.filiale_id === f.id).length,
-    letzte_bestellung: bestellungen
-      .filter(b => b.filiale_id === f.id)
-      .sort((a, b) => new Date(b.zeitstempel) - new Date(a.zeitstempel))[0]?.zeitstempel || null,
-    hat_anomalie: bestellungen.some(b =>
-      b.filiale_id === f.id &&
-      b.positionen.some(p => p.plausibilitaet === 'gelb' || p.plausibilitaet === 'rot')
-    ),
-    hat_sonderbestellung: bestellungen.some(b =>
-      b.filiale_id === f.id && b.sonderbestellungen && b.sonderbestellungen.length > 0
-    )
-  }));
+    const status = filialen.map(f => ({
+      ...f,
+      hat_bestellt: filialenMitBestellung.has(f.id),
+      anzahl_bestellungen: bestellungen.filter(b => b.filiale_id === f.id).length,
+      letzte_bestellung: bestellungen
+        .filter(b => b.filiale_id === f.id)
+        .sort((a, b) => new Date(b.zeitstempel) - new Date(a.zeitstempel))[0]?.zeitstempel || null,
+      hat_anomalie: bestellungen.some(b =>
+        b.filiale_id === f.id &&
+        b.positionen.some(p => p.plausibilitaet === 'gelb' || p.plausibilitaet === 'rot')
+      ),
+      hat_sonderbestellung: bestellungen.some(b =>
+        b.filiale_id === f.id && b.sonderbestellungen && b.sonderbestellungen.length > 0
+      )
+    }));
 
-  const bestellt = status.filter(s => s.hat_bestellt).length;
-  const gesamt = filialen.length;
+    const bestellt = status.filter(s => s.hat_bestellt).length;
+    const gesamt = filialen.length;
 
-  res.json({
-    datum,
-    bestellt,
-    gesamt,
-    fehlend: gesamt - bestellt,
-    filialen: status
-  });
+    res.json({
+      datum,
+      bestellt,
+      gesamt,
+      fehlend: gesamt - bestellt,
+      filialen: status
+    });
+  } catch (error) {
+    console.error(`  ❌ Statusfehler: ${error.message}`);
+    res.status(500).json({ success: false, error: error.message });
+  }
 });
 
-app.get('/api/gesamt', (req, res) => {
-  const datum = req.query.datum || new Date().toISOString().split('T')[0];
-  const bestellungen = ladeBestellungen().filter(b => b.zeitstempel.startsWith(datum));
+app.get('/api/gesamt', async (req, res) => {
+  try {
+    const datum = req.query.datum || new Date().toISOString().split('T')[0];
+    const bestellungen = await ladeBestellungen({ datum });
 
-  // Alle Positionen aufaddieren
-  const produktSummen = {};
-  bestellungen.forEach(b => {
-    b.positionen.forEach(p => {
-      const key = p.produkt_id || p.produkt_name;
-      if (!produktSummen[key]) {
-        produktSummen[key] = {
-          produkt_id: p.produkt_id,
-          produkt_name: p.produkt_name,
-          einheit: p.einheit,
-          kategorie: p.kategorie || 'Sonstiges',
-          gesamt_menge: 0,
-          anzahl_filialen: new Set(),
-        };
-      }
-      produktSummen[key].gesamt_menge += p.menge;
-      produktSummen[key].anzahl_filialen.add(b.filiale_id);
-    });
-  });
-
-  // Set zu Zahl konvertieren und sortieren
-  const gesamtbestellung = Object.values(produktSummen)
-    .map(p => ({
-      ...p,
-      anzahl_filialen: p.anzahl_filialen.size
-    }))
-    .sort((a, b) => {
-      // Erst nach Kategorie, dann nach Menge absteigend
-      if (a.kategorie < b.kategorie) return -1;
-      if (a.kategorie > b.kategorie) return 1;
-      return b.gesamt_menge - a.gesamt_menge;
-    });
-
-  // Sonderbestellungen sammeln
-  const sonderbestellungen = [];
-  bestellungen.forEach(b => {
-    (b.sonderbestellungen || []).forEach(sb => {
-      sonderbestellungen.push({
-        ...sb,
-        filiale_id: b.filiale_id,
-        filiale_name: b.filiale_name
+    // Alle Positionen aufaddieren
+    const produktSummen = {};
+    bestellungen.forEach(b => {
+      b.positionen.forEach(p => {
+        const key = p.produkt_id || p.produkt_name;
+        if (!produktSummen[key]) {
+          produktSummen[key] = {
+            produkt_id: p.produkt_id,
+            produkt_name: p.produkt_name,
+            einheit: p.einheit,
+            kategorie: p.kategorie || 'Sonstiges',
+            gesamt_menge: 0,
+            anzahl_filialen: new Set(),
+          };
+        }
+        produktSummen[key].gesamt_menge += p.menge;
+        produktSummen[key].anzahl_filialen.add(b.filiale_id);
       });
     });
-  });
 
-  res.json({
-    datum,
-    anzahl_bestellungen: bestellungen.length,
-    gesamtbestellung,
-    sonderbestellungen
-  });
+    // Set zu Zahl konvertieren und sortieren
+    const gesamtbestellung = Object.values(produktSummen)
+      .map(p => ({
+        ...p,
+        anzahl_filialen: p.anzahl_filialen.size
+      }))
+      .sort((a, b) => {
+        if (a.kategorie < b.kategorie) return -1;
+        if (a.kategorie > b.kategorie) return 1;
+        return b.gesamt_menge - a.gesamt_menge;
+      });
+
+    // Sonderbestellungen sammeln
+    const sonderbestellungen = [];
+    bestellungen.forEach(b => {
+      (b.sonderbestellungen || []).forEach(sb => {
+        sonderbestellungen.push({
+          ...sb,
+          filiale_id: b.filiale_id,
+          filiale_name: b.filiale_name
+        });
+      });
+    });
+
+    res.json({
+      datum,
+      anzahl_bestellungen: bestellungen.length,
+      gesamtbestellung,
+      sonderbestellungen
+    });
+  } catch (error) {
+    console.error(`  ❌ Gesamtfehler: ${error.message}`);
+    res.status(500).json({ success: false, error: error.message });
+  }
 });
 
 // ============================================================
@@ -352,6 +328,43 @@ app.post('/api/kasse/erkenne', async (req, res) => {
   }
 });
 
+// Schritt 3: Kassen-Bestellung speichern
+app.post('/api/kasse/bestellung', async (req, res) => {
+  const { tisch_nr, positionen, kommentar, transkription } = req.body;
+
+  if (!positionen || positionen.length === 0) {
+    return res.status(400).json({ error: 'positionen erforderlich' });
+  }
+
+  try {
+    const zeitstempel = new Date().toISOString();
+    const datum = zeitstempel.split('T')[0];
+    const lfdNr = await zaehleFilialBestellungen('kasse', datum);
+
+    const neueBestellung = {
+      id: `kasse-${datum.replace(/-/g, '')}-${String(lfdNr + 1).padStart(3, '0')}`,
+      filiale_id: 'kasse',
+      filiale_name: tisch_nr ? `Tisch ${tisch_nr}` : 'Kasse',
+      zeitstempel,
+      status: 'bestaetigt',
+      positionen,
+      sonderbestellungen: [],
+      kommentar: kommentar || transkription || '',
+      foto_base64: null,
+      erkennungs_meta: { modell: 'voxtral + mistral-large-latest' },
+      quelle: 'kasse'
+    };
+
+    await speichereBestellung(neueBestellung);
+    const gesamtPreis = positionen.reduce((s, p) => s + (p.preis_gesamt || 0), 0);
+    console.log(`  🛒 Kassen-Bestellung: ${neueBestellung.id} (${positionen.length} Positionen, ${gesamtPreis.toFixed(2)} €)`);
+    res.json({ success: true, bestellung_id: neueBestellung.id });
+  } catch (error) {
+    console.error(`  ❌ Kassen-Bestellungsfehler: ${error.message}`);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // ============================================================
 // STAMMDATEN
 // ============================================================
@@ -391,11 +404,9 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     console.log(`  ═══════════════════════════════════════`);
     console.log(`  🌐 Port:      ${PORT}`);
     console.log(`  🤖 Mock-Mode: ${getMockMode()}`);
-    console.log(`  📁 Daten:     ${join(__dirname, 'data')}`);
+    console.log(`  🗄️  Datenbank: Supabase`);
     console.log('  ═══════════════════════════════════════');
     console.log('');
-
-    initDemoBestellungen();
 
     // API-Verbindung testen
     testeVerbindung().then(ok => {
