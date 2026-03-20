@@ -25,3 +25,4 @@ server/data/bestellungen.json
 
 # Claude Code worktrees
 .claude/
+.vercel
