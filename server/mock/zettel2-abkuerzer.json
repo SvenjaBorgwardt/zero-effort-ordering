@@ -1,0 +1,69 @@
+{
+  "mock": true,
+  "mock_quelle": "zettel2-abkuerzer",
+  "positionen": [
+    {
+      "produkt": "Weizenbrötchen",
+      "menge": 80,
+      "einheit": "Stück",
+      "original_text": "80 WB",
+      "konfidenz": 0.92
+    },
+    {
+      "produkt": "Körnerbrötchen",
+      "menge": 25,
+      "einheit": "Stück",
+      "original_text": "25 KB",
+      "konfidenz": 0.90
+    },
+    {
+      "produkt": "Buttercroissant",
+      "menge": 20,
+      "einheit": "Stück",
+      "original_text": "20 Croi",
+      "konfidenz": 0.88
+    },
+    {
+      "produkt": "Laugenbrezel",
+      "menge": 15,
+      "einheit": "Stück",
+      "original_text": "15 Brezeln",
+      "konfidenz": 0.89
+    },
+    {
+      "produkt": "Rosinenschnecke",
+      "menge": 10,
+      "einheit": "Stück",
+      "original_text": "10 RS",
+      "konfidenz": 0.87
+    },
+    {
+      "produkt": "Mischbrot",
+      "menge": 8,
+      "einheit": "Stück",
+      "original_text": "8 MB",
+      "konfidenz": 0.91
+    },
+    {
+      "produkt": "Dinkelvollkornbrot",
+      "menge": 5,
+      "einheit": "Stück",
+      "original_text": "5 DVK",
+      "konfidenz": 0.85
+    },
+    {
+      "produkt": "Käsekuchen",
+      "menge": 2,
+      "einheit": "Stück",
+      "original_text": "2 KK",
+      "konfidenz": 0.89
+    }
+  ],
+  "sonderbestellungen": [],
+  "kommentar": "",
+  "meta": {
+    "filiale": "Südstadt",
+    "datum": null,
+    "unlesbare_stellen": []
+  }
+}

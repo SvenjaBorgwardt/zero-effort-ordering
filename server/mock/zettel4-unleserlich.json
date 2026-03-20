@@ -1,0 +1,44 @@
+{
+  "mock": true,
+  "mock_quelle": "zettel4-unleserlich",
+  "positionen": [
+    {
+      "produkt": "Weizenbrötchen",
+      "menge": 80,
+      "einheit": "Stück",
+      "original_text": "80 Brötch",
+      "konfidenz": 0.82
+    },
+    {
+      "produkt": "Laugenbrezel",
+      "menge": 20,
+      "einheit": "Stück",
+      "original_text": "20 Lgnbrzl",
+      "konfidenz": 0.55
+    },
+    {
+      "produkt": "Krustenbrot",
+      "menge": 5,
+      "einheit": "Stück",
+      "original_text": "?? Kruste",
+      "konfidenz": 0.35
+    },
+    {
+      "produkt": "Marmorkuchen",
+      "menge": 5,
+      "einheit": "Stück",
+      "original_text": "5 Mrmrkch",
+      "konfidenz": 0.45
+    }
+  ],
+  "sonderbestellungen": [],
+  "kommentar": "",
+  "meta": {
+    "filiale": null,
+    "datum": null,
+    "unlesbare_stellen": [
+      "Menge bei Krustenbrot nicht lesbar, geschätzt als 5",
+      "Produktname in Zeile 4 schwer lesbar"
+    ]
+  }
+}
