@@ -1,19 +1,21 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { Mic, MicOff, Check, X, AlertTriangle, User, ShoppingCart, Coffee, CreditCard, Banknote, Leaf, Info } from 'lucide-react'
 import { transkribiere, erkenneSprache, speichereKassenBestellung, ladeKatalog } from '../services/api'
+import { UTELogo } from './ute-logo'
 
 // ============================================================
 // PRODUKT-KATEGORIEN (für Touchscreen-Buttons)
 // ============================================================
 const KATEGORIEN = [
-  { id: 'alle', label: 'Alle', icon: '🛒' },
-  { id: 'Brötchen', label: 'Brötchen', icon: '🥐' },
-  { id: 'Laugengebäck', label: 'Laugen', icon: '🥨' },
-  { id: 'Feingebäck', label: 'Süßes', icon: '🍰' },
-  { id: 'Brot', label: 'Brot', icon: '🍞' },
-  { id: 'Torten & Kuchen', label: 'Kuchen', icon: '🎂' },
-  { id: 'Snacks', label: 'Snacks', icon: '🥗' },
-  { id: 'Belegware', label: 'Belag', icon: '🧀' },
-  { id: 'Heißgetränke', label: 'Getränke', icon: '☕' },
+  { id: 'alle', label: 'Alle' },
+  { id: 'Brötchen', label: 'Brötchen' },
+  { id: 'Laugengebäck', label: 'Laugen' },
+  { id: 'Feingebäck', label: 'Süßes' },
+  { id: 'Brot', label: 'Brot' },
+  { id: 'Torten & Kuchen', label: 'Kuchen' },
+  { id: 'Snacks', label: 'Snacks' },
+  { id: 'Belegware', label: 'Belag' },
+  { id: 'Heißgetränke', label: 'Getränke' },
 ]
 
 // Stammkunden (Daten von den Bäckerinnen)
@@ -49,11 +51,12 @@ const CROSS_SELLING_REGELN = [
 // ============================================================
 // ALLERGEN-ICONS & FARBEN
 // ============================================================
+// Allergen-Kürzel (ohne Emojis, nur Buchstaben-Codes)
 const ALLERGEN_ICONS = {
-  'A': '🌾', 'A1': '🌾', 'A2': '🌾', 'A3': '🌾',
-  'B': '🦐', 'C': '🥚', 'D': '🐟', 'E': '🥜',
-  'F': '🫘', 'G': '🥛', 'H': '🌰', 'H1': '🌰', 'H2': '🌰', 'H3': '🌰',
-  'I': '🥬', 'J': '🟡', 'K': '⚪', 'L': '🍷', 'M': '🌱', 'N': '🐚',
+  'A': 'A', 'A1': 'A1', 'A2': 'A2', 'A3': 'A3',
+  'B': 'B', 'C': 'C', 'D': 'D', 'E': 'E',
+  'F': 'F', 'G': 'G', 'H': 'H', 'H1': 'H1', 'H2': 'H2', 'H3': 'H3',
+  'I': 'I', 'J': 'J', 'K': 'K', 'L': 'L', 'M': 'M', 'N': 'N',
 }
 
 // Kurznamen für Allergen-Tags
@@ -705,7 +708,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
   if (abgeschlossen) {
     return (
       <div className="min-h-screen bg-baeckerei-bg flex flex-col items-center justify-center p-6">
-        <div className="w-24 h-24 rounded-full bg-green-100 flex items-center justify-center text-5xl mb-6">✅</div>
+        <div className="w-24 h-24 rounded-full bg-green-100 flex items-center justify-center mb-6"><Check size={48} className="text-green-600" /></div>
         <h2 className="text-3xl font-bold text-baeckerei-text mb-2">Bestellung abgeschlossen!</h2>
         <p className="text-baeckerei-text-secondary text-lg mb-2">
           {positionen.length} Position{positionen.length !== 1 ? 'en' : ''} · {formatPreis(gesamtpreis)} · {zahlart === 'bar' ? 'Barzahlung' : 'Kartenzahlung'}
@@ -736,7 +739,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
       {/* ═══ HEADER ═══ */}
       <header className="bg-white border-b border-stone-200 px-4 py-2 flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-3">
-          <span className="text-2xl">🥐</span>
+          <UTELogo size={36} />
           <div>
             <h1 className="text-lg font-bold text-baeckerei-text">UTE Kasse</h1>
             <p className="text-xs text-baeckerei-text-secondary">Hallo, {mitarbeiter?.name}</p>
@@ -746,19 +749,19 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
           {/* Allergen-Check Button */}
           <button onClick={() => setAllergenCheck(true)}
             className="px-3 py-2 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm font-medium hover:bg-red-100">
-            ⚠️ Allergene
+            <AlertTriangle size={14} className="inline mr-1" /> Allergene
           </button>
           {/* Besonderheiten-Button */}
           <button onClick={() => setBesonderheitenPopup(true)}
             className={`px-3 py-2 rounded-xl text-sm font-medium ${aktiveBesonderheiten.size > 0
               ? 'bg-green-100 border border-green-400 text-green-800'
               : 'bg-green-50 border border-green-200 text-green-700 hover:bg-green-100'}`}>
-            🌿 Besonderheiten{aktiveBesonderheiten.size > 0 ? ` (${aktiveBesonderheiten.size})` : ''}
+            <Leaf size={14} className="inline mr-1" /> Besonderheiten{aktiveBesonderheiten.size > 0 ? ` (${aktiveBesonderheiten.size})` : ''}
           </button>
           {/* Stammkunde-Button */}
           <button onClick={() => setStammkundePopup(true)}
             className="px-3 py-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-sm font-medium hover:bg-amber-100">
-            👤 Stammkunde
+            <User size={14} className="inline mr-1" /> Stammkunde
           </button>
           <button onClick={onAbmelden}
             className="text-sm text-baeckerei-text-secondary hover:text-baeckerei-text underline">
@@ -771,7 +774,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
       {fehler && (
         <div className="mx-4 mt-2 bg-red-50 border border-red-200 rounded-xl p-3 text-red-700 text-sm flex justify-between items-center flex-shrink-0">
           <span>{fehler}</span>
-          <button onClick={() => setFehler(null)} className="text-red-400 hover:text-red-600 ml-2">✕</button>
+          <button onClick={() => setFehler(null)} className="text-red-400 hover:text-red-600 ml-2"><X size={16} /></button>
         </div>
       )}
 
@@ -789,7 +792,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
                     ? 'bg-baeckerei-accent text-white shadow-sm'
                     : 'bg-white text-baeckerei-text-secondary border border-stone-200 hover:border-baeckerei-accent'
                   }`}>
-                {kat.icon} {kat.label}
+                {kat.label}
               </button>
             ))}
           </div>
@@ -797,14 +800,14 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
           {/* Allergen-Ausschluss-Banner */}
           {gesperrteAllergene.size > 0 && (
             <div className="mx-2 mt-2 bg-red-50 border border-red-200 rounded-xl p-2 flex items-center gap-2 flex-shrink-0">
-              <span className="text-sm text-red-700 font-medium whitespace-nowrap">⚠️ Ausschluss:</span>
+              <span className="text-sm text-red-700 font-medium whitespace-nowrap flex items-center gap-1"><AlertTriangle size={14} /> Ausschluss:</span>
               <div className="flex flex-wrap gap-1 flex-1">
                 {[...gesperrteAllergene].map(a => (
                   <span key={a} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-xs font-medium">
                     {ALLERGEN_ICONS[a]} {ALLERGEN_KURZ[a]}
                     <button onClick={() => setGesperrteAllergene(prev => {
                       const neu = new Set(prev); neu.delete(a); return neu
-                    })} className="ml-0.5 hover:text-red-900">✕</button>
+                    })} className="ml-0.5 hover:text-red-900"><X size={12} /></button>
                   </span>
                 ))}
               </div>
@@ -832,9 +835,9 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
                       {/* Bio/Vegan/Regional Tags */}
                       {(produkt.bio || produkt.vegan || produkt.regional) && (
                         <div className="flex gap-0.5 mt-0.5 flex-wrap">
-                          {produkt.bio && <span className="text-[10px] bg-green-100 text-green-700 px-1 rounded">🌱 Bio</span>}
-                          {produkt.vegan && <span className="text-[10px] bg-emerald-100 text-emerald-700 px-1 rounded">🥬 Vegan</span>}
-                          {produkt.regional && <span className="text-[10px] bg-blue-100 text-blue-700 px-1 rounded">📍 Regional</span>}
+                          {produkt.bio && <span className="text-[10px] bg-green-100 text-green-700 px-1 rounded">Bio</span>}
+                          {produkt.vegan && <span className="text-[10px] bg-emerald-100 text-emerald-700 px-1 rounded">Vegan</span>}
+                          {produkt.regional && <span className="text-[10px] bg-blue-100 text-blue-700 px-1 rounded">Regional</span>}
                         </div>
                       )}
                       <div className="flex items-center gap-1 mt-1">
@@ -842,11 +845,11 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
                           {produkt.preis ? formatPreis(produkt.preis) : '—'}
                         </span>
                         {istGesperrt && (
-                          <span className="text-xs text-red-500 ml-auto font-medium">⚠️</span>
+                          <span className="text-xs text-red-500 ml-auto font-medium"><AlertTriangle size={12} /></span>
                         )}
                         {!istGesperrt && produkt.allergene?.length > 0 && (
                           <span className="text-xs text-stone-400 ml-auto">
-                            {produkt.allergene.slice(0, 3).map(a => ALLERGEN_ICONS[a] || '⚠️').join('')}
+                            {produkt.allergene.slice(0, 3).map(a => ALLERGEN_ICONS[a] || '!').join('')}
                           </span>
                         )}
                       </div>
@@ -857,7 +860,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
                         className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-stone-100 hover:bg-red-100
                                    text-stone-400 hover:text-red-600 text-xs flex items-center justify-center transition-colors"
                         title="Allergene & Zutaten">
-                        ℹ️
+                        <span className="font-serif font-bold">i</span>
                       </button>
                     )}
                   </div>
@@ -873,7 +876,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
           <div className="flex-1 overflow-y-auto p-3">
             {anzeigePositionen.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-baeckerei-text-secondary">
-                <span className="text-4xl mb-3">🛒</span>
+                <ShoppingCart size={36} className="mb-3 text-baeckerei-text-secondary" />
                 <p className="text-lg font-medium">Noch keine Positionen</p>
                 <p className="text-sm mt-1">Produkte links antippen oder Spracheingabe nutzen</p>
               </div>
@@ -921,7 +924,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
                       {/* Löschen */}
                       {!istLive && (
                         <button onClick={() => entfernePosition(idx)}
-                          className="w-7 h-7 rounded-lg text-stone-300 hover:text-red-500 hover:bg-red-50 flex items-center justify-center text-sm">✕</button>
+                          className="w-7 h-7 rounded-lg text-stone-300 hover:text-red-500 hover:bg-red-50 flex items-center justify-center"><X size={14} /></button>
                       )}
                     </div>
                   )
@@ -933,14 +936,14 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
           {/* Cross-Selling Popup */}
           {crossSelling && (
             <div className="mx-3 mb-2 bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-center gap-3 flex-shrink-0">
-              <span className="text-xl">☕</span>
+              <Coffee size={20} className="text-amber-700 flex-shrink-0" />
               <p className="flex-1 text-sm text-amber-800">{crossSelling.text}</p>
               <button onClick={() => { produktHinzufuegen(crossSelling.produkt); setCrossSelling(null) }}
                 className="px-3 py-1.5 bg-baeckerei-accent text-white rounded-lg text-sm font-medium hover:bg-baeckerei-accent-hover">
                 Ja!
               </button>
               <button onClick={() => setCrossSelling(null)}
-                className="text-amber-400 hover:text-amber-600">✕</button>
+                className="text-amber-400 hover:text-amber-600"><X size={16} /></button>
             </div>
           )}
 
@@ -956,18 +959,18 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
               <button onClick={() => setZahlart('bar')}
                 className={`flex-1 py-3 rounded-xl font-medium text-sm transition-colors
                   ${zahlart === 'bar' ? 'bg-green-100 border-2 border-green-400 text-green-800' : 'bg-stone-50 border-2 border-stone-200 text-baeckerei-text-secondary'}`}>
-                💵 Bar
+                <Banknote size={16} className="inline mr-1" /> Bar
               </button>
               <button onClick={() => setZahlart('karte')}
                 className={`flex-1 py-3 rounded-xl font-medium text-sm transition-colors
                   ${zahlart === 'karte' ? 'bg-blue-100 border-2 border-blue-400 text-blue-800' : 'bg-stone-50 border-2 border-stone-200 text-baeckerei-text-secondary'}`}>
-                💳 Karte
+                <CreditCard size={16} className="inline mr-1" /> Karte
               </button>
               <button onClick={kassieren} disabled={positionen.length === 0}
                 className="flex-[2] py-3 rounded-xl bg-baeckerei-accent hover:bg-baeckerei-accent-hover
                            text-white text-lg font-bold shadow-md active:scale-95 transition-all
                            disabled:opacity-30 disabled:cursor-not-allowed">
-                Kassieren ✓
+                <Check size={18} className="inline mr-1" /> Kassieren
               </button>
             </div>
           </div>
@@ -980,7 +983,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
           <>
             <button onClick={starteAufnahme}
               className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-red-500 hover:bg-red-600 text-white font-semibold shadow-md active:scale-95 transition-all">
-              <span className="text-lg">🎙️</span>
+              <Mic size={18} />
               Spracheingabe
             </button>
             <p className="text-sm text-baeckerei-text-secondary">Gespräch aufnehmen – Bestellung wird automatisch erkannt</p>
@@ -998,7 +1001,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
             </div>
             <button onClick={stoppeAufnahme}
               className="px-5 py-3 rounded-2xl bg-baeckerei-accent hover:bg-baeckerei-accent-hover text-white font-semibold shadow-md active:scale-95 transition-all">
-              Fertig ✓
+              <Check size={16} className="inline mr-1" /> Fertig
             </button>
           </>
         )}
@@ -1015,7 +1018,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
       {stammkundePopup && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setStammkundePopup(false)}>
           <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <h3 className="text-lg font-bold text-baeckerei-text mb-4">👤 Stammkunde auswählen</h3>
+            <h3 className="text-lg font-bold text-baeckerei-text mb-4 flex items-center gap-2"><User size={20} /> Stammkunde auswählen</h3>
             <p className="text-sm text-baeckerei-text-secondary mb-4">Letzte Bestellung wird automatisch geladen</p>
             <div className="flex flex-col gap-3">
               {stammkundenListe.map(kunde => (
@@ -1026,7 +1029,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
                     Letzte: {kunde.letzte.map(p => `${p.menge}× ${p.name}`).join(', ')}
                   </p>
                   {kunde.allergie && (
-                    <p className="text-xs text-red-500 mt-1">⚠️ Allergie: {kunde.allergie}</p>
+                    <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertTriangle size={12} /> Allergie: {kunde.allergie}</p>
                   )}
                 </button>
               ))}
@@ -1048,11 +1051,11 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
       {neuerStammkundePopup && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setNeuerStammkundePopup(false)}>
           <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
-            <h3 className="text-lg font-bold text-baeckerei-text mb-4">👤 Neuen Stammkunden anlegen</h3>
+            <h3 className="text-lg font-bold text-baeckerei-text mb-4 flex items-center gap-2"><User size={20} /> Neuen Stammkunden anlegen</h3>
             {positionen.length > 0 ? (
-              <p className="text-sm text-green-600 mb-4">✓ Aktuelle Bestellung ({positionen.length} Positionen) wird als "wie immer" gespeichert</p>
+              <p className="text-sm text-green-600 mb-4 flex items-center gap-1"><Check size={14} /> Aktuelle Bestellung ({positionen.length} Positionen) wird als "wie immer" gespeichert</p>
             ) : (
-              <p className="text-sm text-orange-500 mb-4">⚠ Noch keine Produkte in der Bestellung — erst bestellen, dann Stammkunde anlegen!</p>
+              <p className="text-sm text-orange-500 mb-4 flex items-center gap-1"><AlertTriangle size={14} /> Noch keine Produkte in der Bestellung — erst bestellen, dann Stammkunde anlegen!</p>
             )}
             <div className="flex flex-col gap-3">
               <div>
@@ -1092,17 +1095,17 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
                 <h3 className="text-lg font-bold text-baeckerei-text">{allergenInfo.name || allergenInfo.produkt_name}</h3>
                 <p className="text-sm text-baeckerei-text-secondary">{allergenInfo.kategorie}</p>
               </div>
-              <button onClick={() => setAllergenInfo(null)} className="text-stone-400 hover:text-stone-600 text-xl">✕</button>
+              <button onClick={() => setAllergenInfo(null)} className="text-stone-400 hover:text-stone-600"><X size={20} /></button>
             </div>
 
             {/* Allergene */}
             {allergenInfo.allergene?.length > 0 && (
               <div className="mb-4">
-                <h4 className="text-sm font-semibold text-red-700 mb-2">⚠️ Enthält (Allergene)</h4>
+                <h4 className="text-sm font-semibold text-red-700 mb-2 flex items-center gap-1"><AlertTriangle size={14} /> Enthält (Allergene)</h4>
                 <div className="flex flex-wrap gap-1.5">
                   {allergenInfo.allergene.map(a => (
                     <span key={a} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs font-medium">
-                      {ALLERGEN_ICONS[a] || '⚠️'} {ALLERGEN_KURZ[a] || a}
+                      {ALLERGEN_ICONS[a] || '!'} {ALLERGEN_KURZ[a] || a}
                     </span>
                   ))}
                 </div>
@@ -1112,11 +1115,11 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
             {/* Kann Spuren enthalten */}
             {allergenInfo.kann_enthalten?.length > 0 && (
               <div className="mb-4">
-                <h4 className="text-sm font-semibold text-amber-700 mb-2">⚡ Kann Spuren enthalten</h4>
+                <h4 className="text-sm font-semibold text-amber-700 mb-2">Kann Spuren enthalten</h4>
                 <div className="flex flex-wrap gap-1.5">
                   {allergenInfo.kann_enthalten.map(a => (
                     <span key={a} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-200 text-amber-700 text-xs font-medium">
-                      {ALLERGEN_ICONS[a] || '⚠️'} {ALLERGEN_KURZ[a] || a}
+                      {ALLERGEN_ICONS[a] || '!'} {ALLERGEN_KURZ[a] || a}
                     </span>
                   ))}
                 </div>
@@ -1126,7 +1129,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
             {/* Zutaten */}
             {allergenInfo.zutaten?.length > 0 && (
               <div className="mb-4">
-                <h4 className="text-sm font-semibold text-baeckerei-text mb-2">📋 Zutaten</h4>
+                <h4 className="text-sm font-semibold text-baeckerei-text mb-2">Zutaten</h4>
                 <p className="text-sm text-baeckerei-text-secondary leading-relaxed">
                   {allergenInfo.zutaten.join(', ')}
                 </p>
@@ -1151,17 +1154,17 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
           <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-start justify-between mb-4">
               <div>
-                <h3 className="text-lg font-bold text-baeckerei-text">⚠️ Allergen-Check</h3>
+                <h3 className="text-lg font-bold text-baeckerei-text flex items-center gap-2"><AlertTriangle size={20} className="text-red-600" /> Allergen-Check</h3>
                 <p className="text-sm text-baeckerei-text-secondary">
                   {positionen.length > 0 ? 'Allergene in der aktuellen Bestellung' : 'Keine Positionen in der Bestellung'}
                 </p>
               </div>
-              <button onClick={() => setAllergenCheck(false)} className="text-stone-400 hover:text-stone-600 text-xl">✕</button>
+              <button onClick={() => setAllergenCheck(false)} className="text-stone-400 hover:text-stone-600"><X size={20} /></button>
             </div>
 
             {/* Schnellfilter: Allergene per Tap ausschließen */}
             <div className="mb-4 p-3 bg-stone-50 rounded-xl">
-              <h4 className="text-xs font-semibold text-baeckerei-text mb-2">🚫 Allergene ausschließen (Produkte werden ausgegraut)</h4>
+              <h4 className="text-xs font-semibold text-baeckerei-text mb-2">Allergene ausschließen (Produkte werden ausgegraut)</h4>
               <div className="flex flex-wrap gap-1.5">
                 {['A1', 'A2', 'A3', 'C', 'G', 'H', 'H1', 'H2', 'K', 'F', 'E', 'J', 'M'].map(code => {
                   const aktiv = gesperrteAllergene.has(code)
@@ -1185,7 +1188,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
 
             {positionen.length === 0 ? (
               <div className="text-center py-8">
-                <span className="text-4xl mb-3 block">🛒</span>
+                <ShoppingCart size={36} className="mb-3 mx-auto text-baeckerei-text-secondary" />
                 <p className="text-baeckerei-text-secondary">Füge Produkte hinzu, um einen Allergen-Check durchzuführen.</p>
               </div>
             ) : (
@@ -1213,7 +1216,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
                         <div className="flex flex-wrap gap-1.5 mb-3">
                           {[...alleAllergene].sort().map(a => (
                             <span key={a} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs font-medium">
-                              {ALLERGEN_ICONS[a] || '⚠️'} {ALLERGEN_KURZ[a] || a}
+                              {ALLERGEN_ICONS[a] || '!'} {ALLERGEN_KURZ[a] || a}
                             </span>
                           ))}
                         </div>
@@ -1229,7 +1232,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
                           <div className="flex flex-wrap gap-1.5">
                             {[...alleKannEnthalten].sort().map(a => (
                               <span key={a} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-700 text-xs font-medium">
-                                {ALLERGEN_ICONS[a] || '⚠️'} {ALLERGEN_KURZ[a] || a}
+                                {ALLERGEN_ICONS[a] || '!'} {ALLERGEN_KURZ[a] || a}
                               </span>
                             ))}
                           </div>
@@ -1278,7 +1281,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
                 {/* Hinweis */}
                 <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-xl">
                   <p className="text-xs text-blue-700">
-                    ℹ️ Diese Angaben dienen der Kundenberatung. Bei schweren Allergien bitte immer die vollständige Zutatenliste prüfen und Rücksprache mit der Backstube halten.
+                    Diese Angaben dienen der Kundenberatung. Bei schweren Allergien bitte immer die vollständige Zutatenliste prüfen und Rücksprache mit der Backstube halten.
                   </p>
                 </div>
               </>
@@ -1292,7 +1295,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setAllergenWarnung(null)}>
           <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
             <div className="text-center mb-4">
-              <span className="text-5xl block mb-3">⚠️</span>
+              <AlertTriangle size={48} className="mx-auto mb-3 text-red-500" />
               <h3 className="text-lg font-bold text-red-700">Allergen-Warnung!</h3>
             </div>
             <p className="text-sm text-baeckerei-text text-center mb-3">
@@ -1330,7 +1333,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setErkannterStammkunde(null)}>
           <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
             <div className="text-center mb-4">
-              <span className="text-5xl block mb-3">👋</span>
+              <User size={48} className="mx-auto mb-3 text-baeckerei-accent" />
               <h3 className="text-lg font-bold text-baeckerei-text">Stammkunde erkannt!</h3>
               <p className="text-baeckerei-accent font-semibold text-xl mt-1">{erkannterStammkunde.name}</p>
             </div>
@@ -1363,13 +1366,13 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
       {besonderheitenPopup && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setBesonderheitenPopup(false)}>
           <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
-            <h3 className="text-lg font-bold text-baeckerei-text mb-2">🌿 Besonderheiten</h3>
+            <h3 className="text-lg font-bold text-baeckerei-text mb-2 flex items-center gap-2"><Leaf size={20} className="text-green-600" /> Besonderheiten</h3>
             <p className="text-sm text-baeckerei-text-secondary mb-4">Nur Produkte mit diesen Eigenschaften anzeigen:</p>
             <div className="flex flex-col gap-3">
               {[
-                { id: 'bio', label: 'Bio', icon: '🌱', farbe: 'green', desc: 'Aus biologischem Anbau' },
-                { id: 'vegan', label: 'Vegan', icon: '🥬', farbe: 'emerald', desc: 'Ohne tierische Zutaten' },
-                { id: 'regional', label: 'Regional', icon: '📍', farbe: 'blue', desc: 'Aus der Region' },
+                { id: 'bio', label: 'Bio', farbe: 'green', desc: 'Aus biologischem Anbau' },
+                { id: 'vegan', label: 'Vegan', farbe: 'emerald', desc: 'Ohne tierische Zutaten' },
+                { id: 'regional', label: 'Regional', farbe: 'blue', desc: 'Aus der Region' },
               ].map(b => {
                 const aktiv = aktiveBesonderheiten.has(b.id)
                 return (
@@ -1382,14 +1385,14 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
                       ${aktiv
                         ? 'bg-green-50 border-green-400'
                         : 'bg-stone-50 border-stone-200 hover:border-green-300'}`}>
-                    <span className="text-2xl">{b.icon}</span>
+                    <Leaf size={24} className={aktiv ? 'text-green-600' : 'text-stone-400'} />
                     <div className="flex-1">
                       <p className={`font-semibold ${aktiv ? 'text-green-800' : 'text-baeckerei-text'}`}>{b.label}</p>
                       <p className="text-xs text-baeckerei-text-secondary">{b.desc}</p>
                     </div>
                     <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center
                       ${aktiv ? 'bg-green-500 border-green-500 text-white' : 'border-stone-300'}`}>
-                      {aktiv && '✓'}
+                      {aktiv && <Check size={14} />}
                     </div>
                   </button>
                 )

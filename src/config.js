@@ -2,7 +2,7 @@
 // App-Konfiguration – Name hier ändern, ändert sich überall
 // ============================================================
 export const APP_NAME = 'UTE';
-export const APP_SUBTITLE = 'Unmittelbare Thekenkommunikation';
+export const APP_SUBTITLE = 'Unkomplizierte Theken Eingabe';
 
 // API Base URL (Vite proxy leitet /api an Express weiter)
 export const API_BASE = '/api';
@@ -17,7 +17,7 @@ export const FARBEN = {
 
 // Plausibilitäts-Labels
 export const PLAUSI_LABELS = {
-  gruen: '✅ OK',
-  gelb: '⚠️ Prüfen',
-  rot: '❌ Unsicher',
+  gruen: 'OK',
+  gelb: 'Prüfen',
+  rot: 'Unsicher',
 };
