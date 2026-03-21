@@ -86,6 +86,35 @@ const ALLERGEN_SPRACH_MAP = [
   { phrasen: ['keine lupine', 'ohne lupine'], codes: ['M'] },
 ]
 
+// ============================================================
+// BESONDERHEITEN-ERKENNUNG per Sprache
+// ============================================================
+// Erkennt Phrasen wie "vegan", "bio", "ohne Tierprodukte"
+const BESONDERHEITEN_SPRACH_MAP = [
+  { phrasen: ['vegan', 'veganes', 'vegane', 'ohne tierprodukte', 'pflanzlich', 'rein pflanzlich', 'ohne tier', 'tierfrei'], id: 'vegan' },
+  { phrasen: ['bio', 'biologisch', 'ökologisch', 'öko', 'aus biologischem', 'bio produkte', 'bio-'], id: 'bio' },
+  { phrasen: ['regional', 'aus der region', 'von hier', 'regionale', 'regionales', 'heimisch'], id: 'regional' },
+]
+
+/**
+ * Erkennt Besonderheiten-Wünsche im Sprachtext.
+ * Gibt ein Set von Besonderheiten-IDs zurück ('vegan', 'bio', 'regional').
+ */
+function erkenneBesonderheiten(text) {
+  if (!text || text.length < 3) return new Set()
+  const lower = text.toLowerCase()
+  const gefunden = new Set()
+  for (const { phrasen, id } of BESONDERHEITEN_SPRACH_MAP) {
+    for (const phrase of phrasen) {
+      if (lower.includes(phrase)) {
+        gefunden.add(id)
+        break
+      }
+    }
+  }
+  return gefunden
+}
+
 /**
  * Erkennt Allergen-Ausschlüsse im Sprachtext.
  * Gibt ein Set von Allergen-Codes zurück, die ausgeschlossen werden sollen.
@@ -303,6 +332,11 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
   const [besonderheitenPopup, setBesonderheitenPopup] = useState(false)
   const [aktiveBesonderheiten, setAktiveBesonderheiten] = useState(new Set()) // 'bio', 'vegan', 'regional'
 
+  // Refs für Sprach-Erkennung (verhindert mehrfache Auslösung)
+  const besonderheitenErkanntRef = useRef(new Set())
+  const allergenErkanntRef = useRef(new Set())
+  const zahlartErkanntRef = useRef(false)
+
   // Stammkunden-Verwaltung (dynamisch erweiterbar)
   const [stammkundenListe, setStammkundenListe] = useState(STAMMKUNDEN)
   const [neuerStammkundePopup, setNeuerStammkundePopup] = useState(false)
@@ -375,6 +409,43 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
       setErkannterStammkunde(kunde)
     }
   }, [liveText, sprachModus])
+
+  // ── BESONDERHEITEN-ERKENNUNG per Sprache (vegan, bio, regional) ──
+  useEffect(() => {
+    if (!liveText) return
+    const neueBesonderheiten = erkenneBesonderheiten(liveText)
+    if (neueBesonderheiten.size > 0) {
+      const wirklichNeu = []
+      neueBesonderheiten.forEach(b => {
+        if (!besonderheitenErkanntRef.current.has(b)) {
+          besonderheitenErkanntRef.current.add(b)
+          wirklichNeu.push(b)
+        }
+      })
+      if (wirklichNeu.length > 0) {
+        setAktiveBesonderheiten(prev => {
+          const neu = new Set(prev)
+          wirklichNeu.forEach(b => neu.add(b))
+          return neu.size !== prev.size ? neu : prev
+        })
+      }
+    }
+  }, [liveText])
+
+  // ── ZAHLART-ERKENNUNG per Sprache (bar / karte) ──
+  useEffect(() => {
+    if (!liveText || zahlartErkanntRef.current) return
+    const lower = liveText.toLowerCase()
+    // Nur die letzten ~60 Zeichen prüfen (damit nicht ein frühes "bar" im Gespräch triggert)
+    const ende = lower.slice(-60)
+    if (ende.match(/\b(bar|barzahlung|bar zahlen|in bar)\b/)) {
+      zahlartErkanntRef.current = true
+      setZahlart('bar')
+    } else if (ende.match(/\b(karte|kartenzahlung|mit karte|ec|ec-karte|kreditkarte)\b/)) {
+      zahlartErkanntRef.current = true
+      setZahlart('karte')
+    }
+  }, [liveText])
 
   // ── PRODUKT MANUELL HINZUFÜGEN (mit Allergen-Warnung) ──
   function produktHinzufuegen(produkt) {
@@ -672,6 +743,9 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
     setErkannterStammkunde(null)
     stammkundeErkanntRef.current = false
     setAktiveBesonderheiten(new Set())
+    besonderheitenErkanntRef.current = new Set()
+    allergenErkanntRef.current = new Set()
+    zahlartErkanntRef.current = false
   }
 
   // ── BERECHNUNGEN ──
@@ -998,6 +1072,25 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
             </div>
             <div className="flex-1 bg-stone-50 rounded-xl px-3 py-2 text-sm text-baeckerei-text min-h-[40px] max-h-[60px] overflow-y-auto">
               {liveText || <span className="text-baeckerei-text-secondary italic">Warte auf Sprache…</span>}
+              {/* Auto-erkannte Features anzeigen */}
+              {(aktiveBesonderheiten.size > 0 || erkannterStammkunde) && (
+                <div className="flex gap-1 mt-1 flex-wrap">
+                  {erkannterStammkunde && (
+                    <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-medium">
+                      {erkannterStammkunde.name}
+                    </span>
+                  )}
+                  {aktiveBesonderheiten.has('vegan') && (
+                    <span className="text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full font-medium">Vegan</span>
+                  )}
+                  {aktiveBesonderheiten.has('bio') && (
+                    <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-medium">Bio</span>
+                  )}
+                  {aktiveBesonderheiten.has('regional') && (
+                    <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-medium">Regional</span>
+                  )}
+                </div>
+              )}
             </div>
             <button onClick={stoppeAufnahme}
               className="px-5 py-3 rounded-2xl bg-baeckerei-accent hover:bg-baeckerei-accent-hover text-white font-semibold shadow-md active:scale-95 transition-all">
