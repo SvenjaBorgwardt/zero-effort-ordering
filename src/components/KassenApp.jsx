@@ -8,21 +8,22 @@ const KATEGORIEN = [
   { id: 'alle', label: 'Alle', icon: '🛒' },
   { id: 'Brötchen', label: 'Brötchen', icon: '🥐' },
   { id: 'Laugengebäck', label: 'Laugen', icon: '🥨' },
-  { id: 'Feingebäck', label: 'Süßes', icon: '🥐' },
+  { id: 'Feingebäck', label: 'Süßes', icon: '🍰' },
   { id: 'Brot', label: 'Brot', icon: '🍞' },
   { id: 'Torten & Kuchen', label: 'Kuchen', icon: '🎂' },
+  { id: 'Snacks', label: 'Snacks', icon: '🥗' },
   { id: 'Belegware', label: 'Belag', icon: '🧀' },
-  { id: 'Getränke', label: 'Getränke', icon: '☕' },
+  { id: 'Heißgetränke', label: 'Getränke', icon: '☕' },
 ]
 
-// Demo-Stammkunden
+// Stammkunden (Daten von den Bäckerinnen)
 const STAMMKUNDEN = [
-  { id: 'sk1', name: 'Frau Mayer', letzte: [
+  { id: 'sk1', name: 'Frau Mayer', spitzname: 'Der Herr Mayer', letzte: [
     { produkt_id: 'weizenbroetchen', name: 'Weizenbrötchen', menge: 6, preis: 0.45 },
     { produkt_id: 'mohnbroetchen', name: 'Mohnbrötchen', menge: 2, preis: 0.50 },
-    { produkt_id: 'mischbrot', name: 'Mischbrot (Weizen/Roggen)', menge: 1, preis: 3.90 },
+    { produkt_id: 'mischbrot', name: 'Mischbrot', menge: 1, preis: 3.90 },
   ]},
-  { id: 'sk2', name: 'Frau Schmidt', letzte: [
+  { id: 'sk2', name: 'Frau Schmidt', spitzname: 'Die Frau Schmidt', allergie: 'Sesam', letzte: [
     { produkt_id: 'croissant', name: 'Buttercroissant', menge: 2, preis: 1.80 },
     { produkt_id: 'dinkelbrot', name: 'Dinkelvollkornbrot', menge: 1, preis: 4.50 },
   ]},
@@ -32,8 +33,15 @@ const STAMMKUNDEN = [
   ]},
 ]
 
-// Kaffee-Produkt (für Cross-Selling, noch nicht im Katalog)
-const KAFFEE = { id: 'kaffee', name: 'Kaffee', preis: 1.80, einheit: 'Stück', kategorie: 'Getränke', allergene: ['G'], zutaten: ['Kaffee', 'Milch (optional)'], kann_enthalten: [] }
+// Cross-Selling Regeln (von den Bäckerinnen)
+const CROSS_SELLING_REGELN = [
+  { trigger: ['Feingebäck', 'Torten & Kuchen'], vorschlag: 'kaffee', text: 'Dazu einen Kaffee? Passt perfekt!', prio: 1 },
+  { trigger: ['Brötchen'], vorschlag: 'kaffee', text: 'Einen Kaffee zum Wachwerden?', prio: 1 },
+  { trigger_produkt: 'butterhoernchen', vorschlag: 'cappuccino', text: 'Ein Cappuccino würde super dazu passen!', prio: 2 },
+  { trigger_produkt: 'roeggelchen', vorschlag: 'nussecke', text: 'Da passt etwas Süßes noch gut dazu!', prio: 1 },
+  { trigger_produkt: 'nussschnecke', vorschlag: 'nussecke', text: 'Nuss und Nuss gesellt sich gern!', prio: 1 },
+  { trigger_produkt: 'cappuccino', vorschlag: 'butterhoernchen', text: 'Nur mit Kaffee wird der Tag aber zu lang!', prio: 2 },
+]
 
 // ============================================================
 // ALLERGEN-ICONS & FARBEN
@@ -285,20 +293,17 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
   const [erkannterStammkunde, setErkannterStammkunde] = useState(null) // per Sprache erkannter Stammkunde
   const stammkundeErkanntRef = useRef(false) // verhindert mehrfaches Popup
 
-  // Katalog laden
+  // Katalog laden (alle Produkte inkl. Getränke kommen jetzt aus dem Katalog)
   useEffect(() => {
     ladeKatalog().then(data => {
-      // Nur Backwaren (keine Rohstoffe) + Kaffee hinzufügen
       const backwaren = (data.backwaren || []).map(p => ({
         ...p,
         produkt_name: p.name,
       }))
-      setProdukte([...backwaren, KAFFEE])
-      // Allergen-Legende laden
+      setProdukte(backwaren)
       if (data.allergene_legende) setAllergenLegende(data.allergene_legende)
     }).catch(() => {
-      // Fallback: leerer Katalog
-      setProdukte([KAFFEE])
+      setProdukte([])
     })
   }, [])
 
@@ -395,19 +400,33 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
     prüfeCrossSelling(produkt)
   }
 
-  // ── CROSS-SELLING LOGIK ──
+  // ── CROSS-SELLING LOGIK (mit Regeln der Bäckerinnen) ──
   function prüfeCrossSelling(produkt) {
-    const süßeKategorien = ['Feingebäck', 'Torten & Kuchen']
-    const brötchenKategorien = ['Brötchen', 'Laugengebäck']
-    const hatSchonKaffee = positionen.some(p => p.produkt_id === 'kaffee')
+    // Beste Regel finden (niedrigste Prio-Zahl = höchste Priorität)
+    let besteRegel = null
+    for (const regel of CROSS_SELLING_REGELN) {
+      // Bereits in Bestellung? → überspringen
+      if (positionen.some(p => p.produkt_id === regel.vorschlag)) continue
+      // Gerade hinzugefügtes Produkt ist das vorgeschlagene? → überspringen
+      if (produkt.id === regel.vorschlag) continue
 
-    if (!hatSchonKaffee && (süßeKategorien.includes(produkt.kategorie) || brötchenKategorien.includes(produkt.kategorie))) {
-      setCrossSelling({
-        text: produkt.kategorie === 'Feingebäck' || produkt.kategorie === 'Torten & Kuchen'
-          ? `Dazu einen Kaffee? Passt perfekt zu ${produkt.name || produkt.produkt_name}!`
-          : `Frühstücksmenü: Dazu einen Kaffee für nur ${formatPreis(KAFFEE.preis)}?`,
-        produkt: KAFFEE,
-      })
+      let passt = false
+      if (regel.trigger_produkt && produkt.id === regel.trigger_produkt) passt = true
+      if (regel.trigger && regel.trigger.includes(produkt.kategorie)) passt = true
+
+      if (passt && (!besteRegel || regel.prio < besteRegel.prio)) {
+        besteRegel = regel
+      }
+    }
+
+    if (besteRegel) {
+      const vorschlagProdukt = produkte.find(p => p.id === besteRegel.vorschlag)
+      if (vorschlagProdukt) {
+        setCrossSelling({
+          text: besteRegel.text,
+          produkt: vorschlagProdukt,
+        })
+      }
     }
   }
 
@@ -442,6 +461,22 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
     }))
     setPositionen(neuePositionen)
     setStammkundePopup(false)
+    // Stammkunden-Allergien automatisch als Ausschluss setzen
+    if (kunde.allergie) {
+      const allergieMap = {
+        'Sesam': ['K'], 'Nüsse': ['H', 'H1', 'H2', 'H3'], 'Milch': ['G'],
+        'Ei': ['C'], 'Gluten': ['A', 'A1', 'A2', 'A3'], 'Soja': ['F'],
+        'Erdnuss': ['E'], 'Senf': ['J'],
+      }
+      const codes = allergieMap[kunde.allergie] || []
+      if (codes.length > 0) {
+        setGesperrteAllergene(prev => {
+          const neu = new Set(prev)
+          codes.forEach(c => neu.add(c))
+          return neu
+        })
+      }
+    }
   }
 
   // ── SPRACHERKENNUNG ──
@@ -931,6 +966,9 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
                   <p className="text-xs text-baeckerei-text-secondary mt-1">
                     Letzte: {kunde.letzte.map(p => `${p.menge}× ${p.name}`).join(', ')}
                   </p>
+                  {kunde.allergie && (
+                    <p className="text-xs text-red-500 mt-1">⚠️ Allergie: {kunde.allergie}</p>
+                  )}
                 </button>
               ))}
             </div>
