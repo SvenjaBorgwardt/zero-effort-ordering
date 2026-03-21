@@ -5,9 +5,11 @@
 
 ## 1. Intro / Hook
 
-> "Wir wollen mit AI wieder die Menschlichkeit in die Kundenkonversation bringen. Wir wollen unseren Verkäuferinnen ermöglichen, permanenten Blickkontakt zu halten – ohne auf einen störenden Bildschirm zu gucken.
+> "Ihr kennt das: Man steht morgens in der Bäckerei. Die Verkäuferin hinter der Theke kennt einen seit Jahren – sie weiß genau was man will, sie fragt nach den Kindern, sie empfiehlt das neue Brot. Und dann kommt die Kasse. Und plötzlich bricht der Blickkontakt. Die Verkäuferin tippt, sucht, scrollt – und die Kundin wartet. Die Technik unterbricht genau das, was die Bäckerei besonders macht: das Gespräch.
 >
-> Ihr kennt das: Man steht in der Bäckerei und die Verkäuferin sucht erstmal stundenlang nach dem richtigen Eingabefeld. Daher haben wir **UTE** erfunden – die **Unkomplizierte Theken-Eingabe**."
+> Wir haben uns gefragt: Was wäre, wenn die Kasse das Gespräch einfach versteht – statt es zu unterbrechen?
+>
+> Das ist **UTE** – Unkomplizierte Theken-Eingabe. Und wir zeigen euch jetzt live, wie das funktioniert."
 
 ---
 

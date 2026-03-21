@@ -175,7 +175,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   app.listen(PORT, () => {
     console.log('');
     console.log('  ═══════════════════════════════════════');
-    console.log('  🥐 UTE – Unmittelbare Thekenkommunikation');
+    console.log('  UTE – Unkomplizierte Theken Eingabe');
     console.log('  ═══════════════════════════════════════');
     console.log(`  🌐 Port:      ${PORT}`);
     console.log(`  🗄️  Datenbank: Supabase`);
