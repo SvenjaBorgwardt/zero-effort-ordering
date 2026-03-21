@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  font-size: 110%;
+}
+
 body {
   background-color: #FFF8F0;
   color: #292524;

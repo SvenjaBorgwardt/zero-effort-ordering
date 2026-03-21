@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UTE – Backup Slides</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: #0a0a0a;
+    color: #e8e8e8;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  .slide {
+    display: none;
+    width: 100vw;
+    height: 100vh;
+    padding: 60px 80px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .slide.active { display: flex; flex-direction: column; }
+
+  /* Navigation */
+  .nav-hint {
+    position: fixed;
+    bottom: 20px;
+    right: 30px;
+    font-size: 13px;
+    color: #555;
+    z-index: 100;
+    font-weight: 300;
+  }
+
+  .slide-counter {
+    position: fixed;
+    bottom: 20px;
+    left: 30px;
+    font-size: 13px;
+    color: #555;
+    z-index: 100;
+    font-weight: 300;
+  }
+
+  /* ===== SLIDE 1: Tech Architecture ===== */
+  .slide-arch { background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%); }
+
+  .slide-arch .title {
+    font-size: 36px;
+    font-weight: 800;
+    margin-bottom: 8px;
+    background: linear-gradient(90deg, #f97316, #fb923c);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .slide-arch .subtitle {
+    font-size: 16px;
+    color: #888;
+    margin-bottom: 40px;
+    font-weight: 300;
+  }
+
+  .arch-container {
+    display: flex;
+    gap: 40px;
+    flex: 1;
+    align-items: stretch;
+  }
+
+  .arch-flow {
+    flex: 1.3;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .flow-step {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 20px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    transition: all 0.3s;
+  }
+
+  .flow-step:hover {
+    background: rgba(249, 115, 22, 0.08);
+    border-color: rgba(249, 115, 22, 0.3);
+  }
+
+  .flow-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .flow-step .label { font-weight: 600; font-size: 15px; }
+  .flow-step .desc { font-size: 12px; color: #999; margin-top: 2px; }
+
+  .flow-arrow {
+    text-align: center;
+    color: #f97316;
+    font-size: 18px;
+    margin: -4px 0;
+    padding-left: 18px;
+  }
+
+  .arch-passes {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .pass-card {
+    flex: 1;
+    padding: 24px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .pass-card.pass1 {
+    background: linear-gradient(135deg, rgba(249,115,22,0.12) 0%, rgba(249,115,22,0.04) 100%);
+    border-color: rgba(249,115,22,0.25);
+  }
+
+  .pass-card.pass2 {
+    background: linear-gradient(135deg, rgba(59,130,246,0.12) 0%, rgba(59,130,246,0.04) 100%);
+    border-color: rgba(59,130,246,0.25);
+  }
+
+  .pass-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+
+  .pass1 .pass-label { color: #f97316; }
+  .pass2 .pass-label { color: #3b82f6; }
+
+  .pass-card .pass-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .pass-card .pass-time {
+    font-size: 13px;
+    color: #888;
+    margin-bottom: 12px;
+  }
+
+  .pass-card .pass-desc {
+    font-size: 13px;
+    color: #bbb;
+    line-height: 1.6;
+  }
+
+  /* ===== SLIDE 2: Tech Stack ===== */
+  .slide-stack { background: linear-gradient(135deg, #0a0a0a 0%, #0a1a2e 100%); }
+
+  .slide-stack .title {
+    font-size: 36px;
+    font-weight: 800;
+    margin-bottom: 40px;
+    background: linear-gradient(90deg, #3b82f6, #60a5fa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .stack-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    flex: 1;
+  }
+
+  .stack-card {
+    padding: 24px;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    transition: all 0.3s;
+  }
+
+  .stack-card:hover {
+    background: rgba(59,130,246,0.06);
+    border-color: rgba(59,130,246,0.25);
+    transform: translateY(-2px);
+  }
+
+  .stack-card .card-icon {
+    font-size: 28px;
+    margin-bottom: 12px;
+  }
+
+  .stack-card .card-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #3b82f6;
+    margin-bottom: 6px;
+  }
+
+  .stack-card .card-tech {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .stack-card .card-details {
+    font-size: 13px;
+    color: #888;
+    line-height: 1.5;
+  }
+
+  /* ===== SLIDE 3: Team ===== */
+  .slide-team {
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a0a2e 100%);
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .slide-team .title {
+    font-size: 36px;
+    font-weight: 800;
+    margin-bottom: 8px;
+    background: linear-gradient(90deg, #a855f7, #c084fc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .slide-team .subtitle {
+    font-size: 18px;
+    color: #888;
+    margin-bottom: 50px;
+    font-weight: 300;
+  }
+
+  .team-grid {
+    display: flex;
+    gap: 40px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .team-member {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .team-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: rgba(168,85,247,0.15);
+    border: 2px solid rgba(168,85,247,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+  }
+
+  .team-name {
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  .team-role {
+    font-size: 13px;
+    color: #a855f7;
+    font-weight: 500;
+  }
+
+  .team-qr-placeholder {
+    width: 100px;
+    height: 100px;
+    border-radius: 10px;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 4px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .team-qr-placeholder .qr-text {
+    font-size: 10px;
+    color: #666;
+    font-weight: 500;
+    text-align: center;
+    padding: 8px;
+  }
+
+  .connect-text {
+    margin-top: 50px;
+    font-size: 22px;
+    font-weight: 300;
+    color: #888;
+  }
+
+  .connect-text span {
+    color: #a855f7;
+    font-weight: 600;
+  }
+
+  /* UTE branding footer */
+  .ute-badge {
+    position: fixed;
+    top: 20px;
+    right: 30px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 100;
+  }
+
+  .ute-badge img {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+  }
+
+  .ute-badge .ute-name {
+    font-size: 16px;
+    font-weight: 800;
+    color: #888;
+  }
+</style>
+</head>
+<body>
+
+<!-- UTE Badge -->
+<div class="ute-badge">
+  <img src="ute-logo.png" alt="UTE">
+  <span class="ute-name">UTE</span>
+</div>
+
+<!-- Slide Counter -->
+<div class="slide-counter" id="counter">1 / 3</div>
+<div class="nav-hint">← → Pfeiltasten zum Navigieren</div>
+
+<!-- ===== SLIDE 1: Technische Architektur ===== -->
+<div class="slide slide-arch active" id="slide1">
+  <div class="title">Technische Architektur</div>
+  <div class="subtitle">Zwei-Pass-System für Echtzeit-Spracherkennung</div>
+
+  <div class="arch-container">
+    <div class="arch-flow">
+      <div class="flow-step">
+        <div class="flow-icon" style="background: rgba(249,115,22,0.15);">🎙️</div>
+        <div>
+          <div class="label">Mikrofon</div>
+          <div class="desc">Audio-Eingabe am Thekengerät</div>
+        </div>
+      </div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step">
+        <div class="flow-icon" style="background: rgba(249,115,22,0.15);">⚡</div>
+        <div>
+          <div class="label">Browser Speech API</div>
+          <div class="desc">Live-Transkript &lt;200ms · Echtzeit-Produkterkennung</div>
+        </div>
+      </div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step">
+        <div class="flow-icon" style="background: rgba(59,130,246,0.15);">🔄</div>
+        <div>
+          <div class="label">Mistral Voxtral</div>
+          <div class="desc">Korrektur-Pass · Genauere Transkription (~2s)</div>
+        </div>
+      </div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step">
+        <div class="flow-icon" style="background: rgba(59,130,246,0.15);">🧠</div>
+        <div>
+          <div class="label">Mistral Large</div>
+          <div class="desc">Smalltalk filtern · Bestellpositionen extrahieren</div>
+        </div>
+      </div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step">
+        <div class="flow-icon" style="background: rgba(16,185,129,0.15);">🔍</div>
+        <div>
+          <div class="label">Fuse.js Fuzzy Matching</div>
+          <div class="desc">Fehlertolerante Produktzuordnung im Katalog</div>
+        </div>
+      </div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step">
+        <div class="flow-icon" style="background: rgba(16,185,129,0.15);">💾</div>
+        <div>
+          <div class="label">Supabase (PostgreSQL)</div>
+          <div class="desc">Bestellung speichern · Stammkunden · Allergene</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arch-passes">
+      <div class="pass-card pass1">
+        <div class="pass-label">Pass 1 — Sofort</div>
+        <div class="pass-title">Browser Speech API</div>
+        <div class="pass-time">⚡ Latenz &lt; 200ms</div>
+        <div class="pass-desc">
+          Echtzeit-Vorschau: Produkte erscheinen noch während die Kundin spricht.
+          Erkennt sofort Stammkunden, Allergene, Besonderheiten (vegan/bio/regional) und Zahlart (bar/karte).
+        </div>
+      </div>
+      <div class="pass-card pass2">
+        <div class="pass-label">Pass 2 — Hintergrund</div>
+        <div class="pass-title">Voxtral + Mistral Large</div>
+        <div class="pass-time">🔄 Korrektur nach ~2 Sekunden</div>
+        <div class="pass-desc">
+          Nach Aufnahme-Ende: Voxtral liefert genauere Transkription, Mistral Large filtert Smalltalk und extrahiert nur echte Bestellpositionen.
+          Korrigiert und verfeinert die Live-Erkennung.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SLIDE 2: Tech Stack ===== -->
+<div class="slide slide-stack" id="slide2">
+  <div class="title">Tech Stack</div>
+
+  <div class="stack-grid">
+    <div class="stack-card">
+      <div class="card-icon">⚛️</div>
+      <div class="card-label">Frontend</div>
+      <div class="card-tech">React 18 + Vite</div>
+      <div class="card-details">Tailwind CSS, Radix UI<br>Schnelle Entwicklung, responsive UI</div>
+    </div>
+
+    <div class="stack-card">
+      <div class="card-icon">🖥️</div>
+      <div class="card-label">Backend</div>
+      <div class="card-tech">Express.js + Node.js</div>
+      <div class="card-details">REST API, Audio-Verarbeitung<br>Vercel-ready (Serverless)</div>
+    </div>
+
+    <div class="stack-card">
+      <div class="card-icon">🧠</div>
+      <div class="card-label">KI / ML</div>
+      <div class="card-tech">Mistral AI</div>
+      <div class="card-details">Mistral Large (Parsing)<br>Voxtral Mini (Transkription)</div>
+    </div>
+
+    <div class="stack-card">
+      <div class="card-icon">💾</div>
+      <div class="card-label">Datenbank</div>
+      <div class="card-tech">Supabase</div>
+      <div class="card-details">PostgreSQL, Echtzeit-Sync<br>Stammkunden, Allergene, Produkte</div>
+    </div>
+
+    <div class="stack-card">
+      <div class="card-icon">🔍</div>
+      <div class="card-label">Matching</div>
+      <div class="card-tech">Fuse.js</div>
+      <div class="card-details">Fuzzy Search für fehlertolerante<br>Produkterkennung (Dialekt, Nuscheln)</div>
+    </div>
+
+    <div class="stack-card">
+      <div class="card-icon">🎙️</div>
+      <div class="card-label">Audio</div>
+      <div class="card-tech">Web Audio API</div>
+      <div class="card-details">Browser Speech API (Live)<br>MediaRecorder für Voxtral-Pass</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SLIDE 3: Team ===== -->
+<div class="slide slide-team" id="slide3">
+  <div class="title">Das Team hinter UTE</div>
+  <div class="subtitle">4 Frauen · 2 Techies · 2 Handwerkerinnen · 1 Dream Team</div>
+
+  <div class="team-grid">
+    <div class="team-member">
+      <div class="team-avatar">👩‍💻</div>
+      <div class="team-name">[Name 1]</div>
+      <div class="team-role">Tech</div>
+      <div class="team-qr-placeholder">
+        <div class="qr-text">LinkedIn<br>QR-Code<br>hier</div>
+      </div>
+    </div>
+
+    <div class="team-member">
+      <div class="team-avatar">👩‍💻</div>
+      <div class="team-name">[Name 2]</div>
+      <div class="team-role">Tech</div>
+      <div class="team-qr-placeholder">
+        <div class="qr-text">LinkedIn<br>QR-Code<br>hier</div>
+      </div>
+    </div>
+
+    <div class="team-member">
+      <div class="team-avatar">👩‍🍳</div>
+      <div class="team-name">[Name 3]</div>
+      <div class="team-role">Backhandwerk</div>
+      <div class="team-qr-placeholder">
+        <div class="qr-text">LinkedIn<br>QR-Code<br>hier</div>
+      </div>
+    </div>
+
+    <div class="team-member">
+      <div class="team-avatar">👩‍🍳</div>
+      <div class="team-name">[Name 4]</div>
+      <div class="team-role">Backhandwerk</div>
+      <div class="team-qr-placeholder">
+        <div class="qr-text">LinkedIn<br>QR-Code<br>hier</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connect-text">Vernetzt euch mit uns auf <span>LinkedIn</span></div>
+</div>
+
+<script>
+  let current = 0;
+  const slides = document.querySelectorAll('.slide');
+  const counter = document.getElementById('counter');
+
+  function showSlide(n) {
+    slides[current].classList.remove('active');
+    current = (n + slides.length) % slides.length;
+    slides[current].classList.add('active');
+    counter.textContent = `${current + 1} / ${slides.length}`;
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ') showSlide(current + 1);
+    if (e.key === 'ArrowLeft') showSlide(current - 1);
+  });
+
+  // Click navigation
+  document.addEventListener('click', (e) => {
+    if (e.clientX > window.innerWidth / 2) showSlide(current + 1);
+    else showSlide(current - 1);
+  });
+</script>
+
+</body>
+</html>
