@@ -54,6 +54,53 @@ const ALLERGEN_KURZ = {
 }
 
 // ============================================================
+// ALLERGEN-AUSSCHLUSS per Sprache
+// ============================================================
+// Erkennt Phrasen wie "keine Nüsse", "ohne Milch", "allergie gegen Ei"
+const ALLERGEN_SPRACH_MAP = [
+  { phrasen: ['keine nüsse', 'ohne nüsse', 'nussallergie', 'nuss allergie', 'allergie gegen nüsse', 'keine nuss', 'ohne nuss'], codes: ['H', 'H1', 'H2', 'H3'] },
+  { phrasen: ['keine mandeln', 'ohne mandeln', 'mandelallergie'], codes: ['H1'] },
+  { phrasen: ['keine haselnüsse', 'ohne haselnüsse', 'keine haselnuss', 'ohne haselnuss'], codes: ['H2'] },
+  { phrasen: ['keine walnüsse', 'ohne walnüsse', 'keine walnuss', 'ohne walnuss'], codes: ['H3'] },
+  { phrasen: ['keine milch', 'ohne milch', 'laktosefrei', 'milchallergie', 'laktose', 'keine laktose', 'ohne laktose'], codes: ['G'] },
+  { phrasen: ['kein ei', 'keine eier', 'ohne ei', 'ohne eier', 'eiallergie', 'ei allergie'], codes: ['C'] },
+  { phrasen: ['kein gluten', 'ohne gluten', 'glutenfrei', 'zöliakie', 'glutenunverträglichkeit', 'kein weizen', 'ohne weizen'], codes: ['A', 'A1', 'A2', 'A3'] },
+  { phrasen: ['kein sesam', 'ohne sesam', 'sesamallergie'], codes: ['K'] },
+  { phrasen: ['keine soja', 'ohne soja', 'kein soja', 'sojaallergie'], codes: ['F'] },
+  { phrasen: ['kein senf', 'ohne senf', 'senfallergie'], codes: ['J'] },
+  { phrasen: ['keine erdnüsse', 'ohne erdnüsse', 'erdnussallergie', 'keine erdnuss', 'ohne erdnuss'], codes: ['E'] },
+  { phrasen: ['keine lupine', 'ohne lupine'], codes: ['M'] },
+]
+
+/**
+ * Erkennt Allergen-Ausschlüsse im Sprachtext.
+ * Gibt ein Set von Allergen-Codes zurück, die ausgeschlossen werden sollen.
+ */
+function erkenneAllergenAusschluss(text) {
+  if (!text || text.length < 5) return new Set()
+  const lower = text.toLowerCase()
+  const gefunden = new Set()
+  for (const { phrasen, codes } of ALLERGEN_SPRACH_MAP) {
+    for (const phrase of phrasen) {
+      if (lower.includes(phrase)) {
+        codes.forEach(c => gefunden.add(c))
+        break
+      }
+    }
+  }
+  return gefunden
+}
+
+/**
+ * Prüft ob ein Produkt ein gesperrtes Allergen enthält.
+ */
+function hatGesperrtesAllergen(produkt, gesperrteAllergene) {
+  if (!gesperrteAllergene || gesperrteAllergene.size === 0) return false
+  const produktAllergene = [...(produkt.allergene || []), ...(produkt.kann_enthalten || [])]
+  return produktAllergene.some(a => gesperrteAllergene.has(a))
+}
+
+// ============================================================
 // ZAHLWÖRTER → Ziffern (für Live-Erkennung)
 // ============================================================
 const ZAHLWOERTER = {
@@ -163,6 +210,8 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
   const [allergenInfo, setAllergenInfo] = useState(null) // null oder {produkt, ...}
   const [allergenCheck, setAllergenCheck] = useState(false) // Gesamt-Allergen-Check
   const [allergenLegende, setAllergenLegende] = useState({})
+  const [gesperrteAllergene, setGesperrteAllergene] = useState(new Set()) // per Sprache erkannte Ausschlüsse
+  const [allergenWarnung, setAllergenWarnung] = useState(null) // {produkt, allergene} für Warnungs-Popup
 
   // Katalog laden
   useEffect(() => {
@@ -211,8 +260,33 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
     }
   }, [liveText, sprachModus, produkte])
 
-  // ── PRODUKT MANUELL HINZUFÜGEN ──
+  // ── LIVE-ALLERGEN-AUSSCHLUSS-ERKENNUNG ──
+  useEffect(() => {
+    if (!liveText) return
+    const ausschlüsse = erkenneAllergenAusschluss(liveText)
+    if (ausschlüsse.size > 0) {
+      setGesperrteAllergene(prev => {
+        const neu = new Set(prev)
+        ausschlüsse.forEach(a => neu.add(a))
+        return neu.size !== prev.size ? neu : prev
+      })
+    }
+  }, [liveText])
+
+  // ── PRODUKT MANUELL HINZUFÜGEN (mit Allergen-Warnung) ──
   function produktHinzufuegen(produkt) {
+    // Prüfe ob Produkt gesperrtes Allergen enthält
+    if (hatGesperrtesAllergen(produkt, gesperrteAllergene)) {
+      const betroffene = [...(produkt.allergene || []), ...(produkt.kann_enthalten || [])]
+        .filter(a => gesperrteAllergene.has(a))
+      setAllergenWarnung({ produkt, allergene: betroffene })
+      return // Nicht direkt hinzufügen, erst bestätigen
+    }
+    produktWirklichHinzufuegen(produkt)
+  }
+
+  // Eigentliches Hinzufügen (nach Bestätigung oder wenn kein Allergen-Konflikt)
+  function produktWirklichHinzufuegen(produkt) {
     setPositionen(prev => {
       const existing = prev.findIndex(p => p.produkt_id === produkt.id)
       if (existing >= 0) {
@@ -434,6 +508,8 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
     setCrossSelling(null)
     setZahlart('bar')
     setLiveText('')
+    setGesperrteAllergene(new Set())
+    setAllergenWarnung(null)
   }
 
   // ── BERECHNUNGEN ──
@@ -543,40 +619,67 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
             ))}
           </div>
 
+          {/* Allergen-Ausschluss-Banner */}
+          {gesperrteAllergene.size > 0 && (
+            <div className="mx-2 mt-2 bg-red-50 border border-red-200 rounded-xl p-2 flex items-center gap-2 flex-shrink-0">
+              <span className="text-sm text-red-700 font-medium whitespace-nowrap">⚠️ Ausschluss:</span>
+              <div className="flex flex-wrap gap-1 flex-1">
+                {[...gesperrteAllergene].map(a => (
+                  <span key={a} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-xs font-medium">
+                    {ALLERGEN_ICONS[a]} {ALLERGEN_KURZ[a]}
+                    <button onClick={() => setGesperrteAllergene(prev => {
+                      const neu = new Set(prev); neu.delete(a); return neu
+                    })} className="ml-0.5 hover:text-red-900">✕</button>
+                  </span>
+                ))}
+              </div>
+              <button onClick={() => setGesperrteAllergene(new Set())}
+                className="text-xs text-red-400 hover:text-red-600 whitespace-nowrap">Alle aufheben</button>
+            </div>
+          )}
+
           {/* Produkt-Grid */}
           <div className="flex-1 overflow-y-auto p-2">
             <div className="grid grid-cols-3 gap-2">
-              {gefilterteProdukte.map(produkt => (
-                <div key={produkt.id} className="relative">
-                  <button onClick={() => produktHinzufuegen(produkt)}
-                    className="w-full bg-white rounded-xl border-2 border-stone-100 p-3 text-left
-                               hover:border-baeckerei-accent hover:shadow-sm active:bg-amber-50
-                               transition-all flex flex-col justify-between min-h-[80px]">
-                    <span className="font-medium text-baeckerei-text text-sm leading-tight pr-6">
-                      {produkt.name || produkt.produkt_name}
-                    </span>
-                    <div className="flex items-center gap-1 mt-1">
-                      <span className="text-baeckerei-accent font-bold text-sm">
-                        {produkt.preis ? formatPreis(produkt.preis) : '—'}
+              {gefilterteProdukte.map(produkt => {
+                const istGesperrt = hatGesperrtesAllergen(produkt, gesperrteAllergene)
+                return (
+                  <div key={produkt.id} className="relative">
+                    <button onClick={() => produktHinzufuegen(produkt)}
+                      className={`w-full rounded-xl border-2 p-3 text-left transition-all flex flex-col justify-between min-h-[80px]
+                        ${istGesperrt
+                          ? 'bg-stone-100 border-red-200 opacity-60'
+                          : 'bg-white border-stone-100 hover:border-baeckerei-accent hover:shadow-sm active:bg-amber-50'
+                        }`}>
+                      <span className={`font-medium text-sm leading-tight pr-6 ${istGesperrt ? 'text-stone-400' : 'text-baeckerei-text'}`}>
+                        {produkt.name || produkt.produkt_name}
                       </span>
-                      {produkt.allergene?.length > 0 && (
-                        <span className="text-xs text-stone-400 ml-auto">
-                          {produkt.allergene.slice(0, 3).map(a => ALLERGEN_ICONS[a] || '⚠️').join('')}
+                      <div className="flex items-center gap-1 mt-1">
+                        <span className={`font-bold text-sm ${istGesperrt ? 'text-stone-400' : 'text-baeckerei-accent'}`}>
+                          {produkt.preis ? formatPreis(produkt.preis) : '—'}
                         </span>
-                      )}
-                    </div>
-                  </button>
-                  {/* Allergen-Info Button */}
-                  {(produkt.allergene?.length > 0 || produkt.zutaten?.length > 0) && (
-                    <button onClick={(e) => { e.stopPropagation(); setAllergenInfo(produkt) }}
-                      className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-stone-100 hover:bg-red-100
-                                 text-stone-400 hover:text-red-600 text-xs flex items-center justify-center transition-colors"
-                      title="Allergene & Zutaten">
-                      ℹ️
+                        {istGesperrt && (
+                          <span className="text-xs text-red-500 ml-auto font-medium">⚠️</span>
+                        )}
+                        {!istGesperrt && produkt.allergene?.length > 0 && (
+                          <span className="text-xs text-stone-400 ml-auto">
+                            {produkt.allergene.slice(0, 3).map(a => ALLERGEN_ICONS[a] || '⚠️').join('')}
+                          </span>
+                        )}
+                      </div>
                     </button>
-                  )}
-                </div>
-              ))}
+                    {/* Allergen-Info Button */}
+                    {(produkt.allergene?.length > 0 || produkt.zutaten?.length > 0) && (
+                      <button onClick={(e) => { e.stopPropagation(); setAllergenInfo(produkt) }}
+                        className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-stone-100 hover:bg-red-100
+                                   text-stone-400 hover:text-red-600 text-xs flex items-center justify-center transition-colors"
+                        title="Allergene & Zutaten">
+                        ℹ️
+                      </button>
+                    )}
+                  </div>
+                )
+              })}
             </div>
           </div>
         </div>
@@ -826,6 +929,30 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
               <button onClick={() => setAllergenCheck(false)} className="text-stone-400 hover:text-stone-600 text-xl">✕</button>
             </div>
 
+            {/* Schnellfilter: Allergene per Tap ausschließen */}
+            <div className="mb-4 p-3 bg-stone-50 rounded-xl">
+              <h4 className="text-xs font-semibold text-baeckerei-text mb-2">🚫 Allergene ausschließen (Produkte werden ausgegraut)</h4>
+              <div className="flex flex-wrap gap-1.5">
+                {['A1', 'A2', 'A3', 'C', 'G', 'H', 'H1', 'H2', 'K', 'F', 'E', 'J', 'M'].map(code => {
+                  const aktiv = gesperrteAllergene.has(code)
+                  return (
+                    <button key={code} onClick={() => setGesperrteAllergene(prev => {
+                      const neu = new Set(prev)
+                      if (aktiv) neu.delete(code); else neu.add(code)
+                      return neu
+                    })}
+                      className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-colors
+                        ${aktiv
+                          ? 'bg-red-500 text-white border border-red-500'
+                          : 'bg-white text-stone-600 border border-stone-200 hover:border-red-300'
+                        }`}>
+                      {ALLERGEN_ICONS[code]} {ALLERGEN_KURZ[code]}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
             {positionen.length === 0 ? (
               <div className="text-center py-8">
                 <span className="text-4xl mb-3 block">🛒</span>
@@ -926,6 +1053,44 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
                 </div>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ═══ ALLERGEN-WARNUNG POPUP (gesperrtes Produkt angeklickt) ═══ */}
+      {allergenWarnung && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setAllergenWarnung(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
+            <div className="text-center mb-4">
+              <span className="text-5xl block mb-3">⚠️</span>
+              <h3 className="text-lg font-bold text-red-700">Allergen-Warnung!</h3>
+            </div>
+            <p className="text-sm text-baeckerei-text text-center mb-3">
+              <strong>{allergenWarnung.produkt.name || allergenWarnung.produkt.produkt_name}</strong> enthält:
+            </p>
+            <div className="flex flex-wrap gap-1.5 justify-center mb-4">
+              {allergenWarnung.allergene.map(a => (
+                <span key={a} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-red-100 border border-red-300 text-red-700 text-sm font-medium">
+                  {ALLERGEN_ICONS[a]} {ALLERGEN_KURZ[a]}
+                </span>
+              ))}
+            </div>
+            <p className="text-xs text-baeckerei-text-secondary text-center mb-5">
+              Der Kunde hat angegeben, diese Allergene zu meiden.
+            </p>
+            <div className="flex gap-3">
+              <button onClick={() => setAllergenWarnung(null)}
+                className="flex-1 py-3 rounded-xl bg-stone-100 hover:bg-stone-200 text-baeckerei-text font-medium text-sm">
+                Abbrechen
+              </button>
+              <button onClick={() => {
+                produktWirklichHinzufuegen(allergenWarnung.produkt)
+                setAllergenWarnung(null)
+              }}
+                className="flex-1 py-3 rounded-xl bg-red-500 hover:bg-red-600 text-white font-medium text-sm">
+                Trotzdem hinzufügen
+              </button>
+            </div>
           </div>
         </div>
       )}
