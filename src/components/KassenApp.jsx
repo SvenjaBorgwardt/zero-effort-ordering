@@ -293,6 +293,10 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
   const [erkannterStammkunde, setErkannterStammkunde] = useState(null) // per Sprache erkannter Stammkunde
   const stammkundeErkanntRef = useRef(false) // verhindert mehrfaches Popup
 
+  // Besonderheiten-Filter (Bio, Vegan, Regional)
+  const [besonderheitenPopup, setBesonderheitenPopup] = useState(false)
+  const [aktiveBesonderheiten, setAktiveBesonderheiten] = useState(new Set()) // 'bio', 'vegan', 'regional'
+
   // Katalog laden (alle Produkte inkl. Getränke kommen jetzt aus dem Katalog)
   useEffect(() => {
     ladeKatalog().then(data => {
@@ -634,6 +638,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
     setAllergenWarnung(null)
     setErkannterStammkunde(null)
     stammkundeErkanntRef.current = false
+    setAktiveBesonderheiten(new Set())
   }
 
   // ── BERECHNUNGEN ──
@@ -647,9 +652,18 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
     })
   }
   const gesamtpreis = anzeigePositionen.reduce((sum, p) => sum + (p.preis_gesamt || 0), 0)
-  const gefilterteProdukte = aktiveKategorie === 'alle'
+  let gefilterteProdukte = aktiveKategorie === 'alle'
     ? produkte
     : produkte.filter(p => p.kategorie === aktiveKategorie)
+  // Besonderheiten-Filter anwenden
+  if (aktiveBesonderheiten.size > 0) {
+    gefilterteProdukte = gefilterteProdukte.filter(p => {
+      if (aktiveBesonderheiten.has('bio') && !p.bio) return false
+      if (aktiveBesonderheiten.has('vegan') && !p.vegan) return false
+      if (aktiveBesonderheiten.has('regional') && !p.regional) return false
+      return true
+    })
+  }
 
   function formatZeit(sek) {
     const m = Math.floor(sek / 60).toString().padStart(2, '0')
@@ -703,6 +717,13 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
           <button onClick={() => setAllergenCheck(true)}
             className="px-3 py-2 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm font-medium hover:bg-red-100">
             ⚠️ Allergene
+          </button>
+          {/* Besonderheiten-Button */}
+          <button onClick={() => setBesonderheitenPopup(true)}
+            className={`px-3 py-2 rounded-xl text-sm font-medium ${aktiveBesonderheiten.size > 0
+              ? 'bg-green-100 border border-green-400 text-green-800'
+              : 'bg-green-50 border border-green-200 text-green-700 hover:bg-green-100'}`}>
+            🌿 Besonderheiten{aktiveBesonderheiten.size > 0 ? ` (${aktiveBesonderheiten.size})` : ''}
           </button>
           {/* Stammkunde-Button */}
           <button onClick={() => setStammkundePopup(true)}
@@ -778,6 +799,14 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
                       <span className={`font-medium text-sm leading-tight pr-6 ${istGesperrt ? 'text-stone-400' : 'text-baeckerei-text'}`}>
                         {produkt.name || produkt.produkt_name}
                       </span>
+                      {/* Bio/Vegan/Regional Tags */}
+                      {(produkt.bio || produkt.vegan || produkt.regional) && (
+                        <div className="flex gap-0.5 mt-0.5 flex-wrap">
+                          {produkt.bio && <span className="text-[10px] bg-green-100 text-green-700 px-1 rounded">🌱 Bio</span>}
+                          {produkt.vegan && <span className="text-[10px] bg-emerald-100 text-emerald-700 px-1 rounded">🥬 Vegan</span>}
+                          {produkt.regional && <span className="text-[10px] bg-blue-100 text-blue-700 px-1 rounded">📍 Regional</span>}
+                        </div>
+                      )}
                       <div className="flex items-center gap-1 mt-1">
                         <span className={`font-bold text-sm ${istGesperrt ? 'text-stone-400' : 'text-baeckerei-accent'}`}>
                           {produkt.preis ? formatPreis(produkt.preis) : '—'}
@@ -1250,6 +1279,56 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
               <button onClick={() => { ladeStammkunde(erkannterStammkunde); setErkannterStammkunde(null) }}
                 className="flex-1 py-3 rounded-xl bg-baeckerei-accent hover:bg-baeckerei-accent-hover text-white font-medium text-sm">
                 Ja, laden!
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ BESONDERHEITEN POPUP ═══ */}
+      {besonderheitenPopup && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setBesonderheitenPopup(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-bold text-baeckerei-text mb-2">🌿 Besonderheiten</h3>
+            <p className="text-sm text-baeckerei-text-secondary mb-4">Nur Produkte mit diesen Eigenschaften anzeigen:</p>
+            <div className="flex flex-col gap-3">
+              {[
+                { id: 'bio', label: 'Bio', icon: '🌱', farbe: 'green', desc: 'Aus biologischem Anbau' },
+                { id: 'vegan', label: 'Vegan', icon: '🥬', farbe: 'emerald', desc: 'Ohne tierische Zutaten' },
+                { id: 'regional', label: 'Regional', icon: '📍', farbe: 'blue', desc: 'Aus der Region' },
+              ].map(b => {
+                const aktiv = aktiveBesonderheiten.has(b.id)
+                return (
+                  <button key={b.id} onClick={() => setAktiveBesonderheiten(prev => {
+                    const neu = new Set(prev)
+                    if (aktiv) neu.delete(b.id); else neu.add(b.id)
+                    return neu
+                  })}
+                    className={`flex items-center gap-3 p-4 rounded-xl border-2 text-left transition-all
+                      ${aktiv
+                        ? 'bg-green-50 border-green-400'
+                        : 'bg-stone-50 border-stone-200 hover:border-green-300'}`}>
+                    <span className="text-2xl">{b.icon}</span>
+                    <div className="flex-1">
+                      <p className={`font-semibold ${aktiv ? 'text-green-800' : 'text-baeckerei-text'}`}>{b.label}</p>
+                      <p className="text-xs text-baeckerei-text-secondary">{b.desc}</p>
+                    </div>
+                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center
+                      ${aktiv ? 'bg-green-500 border-green-500 text-white' : 'border-stone-300'}`}>
+                      {aktiv && '✓'}
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+            <div className="flex gap-3 mt-5">
+              <button onClick={() => { setAktiveBesonderheiten(new Set()); setBesonderheitenPopup(false) }}
+                className="flex-1 py-3 rounded-xl bg-stone-100 hover:bg-stone-200 text-baeckerei-text font-medium text-sm">
+                Filter aufheben
+              </button>
+              <button onClick={() => setBesonderheitenPopup(false)}
+                className="flex-1 py-3 rounded-xl bg-green-500 hover:bg-green-600 text-white font-medium text-sm">
+                Anwenden
               </button>
             </div>
           </div>
