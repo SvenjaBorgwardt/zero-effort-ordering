@@ -37,12 +37,8 @@ const STAMMKUNDEN = [
 
 // Cross-Selling Regeln (von den Bäckerinnen)
 const CROSS_SELLING_REGELN = [
-  { trigger: ['Feingebäck', 'Torten & Kuchen'], vorschlag: 'kaffee', text: 'Dazu einen Kaffee? Passt perfekt!', prio: 1 },
-  { trigger: ['Brötchen'], vorschlag: 'kaffee', text: 'Einen Kaffee zum Wachwerden?', prio: 1 },
-  { trigger_produkt: 'butterhoernchen', vorschlag: 'cappuccino', text: 'Ein Cappuccino würde super dazu passen!', prio: 2 },
   { trigger_produkt: 'roeggelchen', vorschlag: 'nussecke', text: 'Da passt etwas Süßes noch gut dazu!', prio: 1 },
   { trigger_produkt: 'nussschnecke', vorschlag: 'nussecke', text: 'Nuss und Nuss gesellt sich gern!', prio: 1 },
-  { trigger_produkt: 'cappuccino', vorschlag: 'butterhoernchen', text: 'Nur mit Kaffee wird der Tag aber zu lang!', prio: 2 },
   { trigger_produkt: 'mischbrot', vorschlag: 'leinsaatbrot', text: 'Ein Körnerbrot wäre eine gute Ergänzung!', prio: 2 },
   { trigger_produkt: 'laugenbrezel', vorschlag: 'vollkornbroetchen', text: 'Ein paar zusätzliche Ballaststoffe passen ganz gut!', prio: 3 },
   { trigger_produkt: 'apfeltasche', vorschlag: 'vegane-quiche', text: 'Dazu eine vegane Quiche? Herzhaft trifft süß!', prio: 1 },
