@@ -488,8 +488,6 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
     // Beste Regel finden (niedrigste Prio-Zahl = höchste Priorität)
     let besteRegel = null
     for (const regel of CROSS_SELLING_REGELN) {
-      // Bereits in Bestellung? → überspringen
-      if (positionen.some(p => p.produkt_id === regel.vorschlag)) continue
       // Gerade hinzugefügtes Produkt ist das vorgeschlagene? → überspringen
       if (produkt.id === regel.vorschlag) continue
 
@@ -505,10 +503,13 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
     if (besteRegel) {
       const vorschlagProdukt = produkte.find(p => p.id === besteRegel.vorschlag)
       if (vorschlagProdukt) {
-        setCrossSelling({
-          text: besteRegel.text,
-          produkt: vorschlagProdukt,
-        })
+        // Kurze Verzögerung damit der State aktualisiert ist
+        setTimeout(() => {
+          setCrossSelling({
+            text: besteRegel.text,
+            produkt: vorschlagProdukt,
+          })
+        }, 100)
       }
     }
   }
