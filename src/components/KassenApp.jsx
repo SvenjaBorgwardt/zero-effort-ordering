@@ -17,7 +17,7 @@ const KATEGORIEN = [
 
 // Demo-Stammkunden
 const STAMMKUNDEN = [
-  { id: 'sk1', name: 'Herr Mayer', letzte: [
+  { id: 'sk1', name: 'Frau Mayer', letzte: [
     { produkt_id: 'weizenbroetchen', name: 'Weizenbrötchen', menge: 6, preis: 0.45 },
     { produkt_id: 'mohnbroetchen', name: 'Mohnbrötchen', menge: 2, preis: 0.50 },
     { produkt_id: 'mischbrot', name: 'Mischbrot (Weizen/Roggen)', menge: 1, preis: 3.90 },
@@ -26,7 +26,7 @@ const STAMMKUNDEN = [
     { produkt_id: 'croissant', name: 'Buttercroissant', menge: 2, preis: 1.80 },
     { produkt_id: 'dinkelbrot', name: 'Dinkelvollkornbrot', menge: 1, preis: 4.50 },
   ]},
-  { id: 'sk3', name: 'Herr Klein', letzte: [
+  { id: 'sk3', name: 'Frau Klein', letzte: [
     { produkt_id: 'koernerbroetchen', name: 'Körnerbrötchen', menge: 4, preis: 0.55 },
     { produkt_id: 'rosinenschnecke', name: 'Rosinenschnecke', menge: 1, preis: 1.60 },
   ]},
