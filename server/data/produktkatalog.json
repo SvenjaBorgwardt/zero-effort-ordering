@@ -1,4 +1,26 @@
 {
+  "allergene_legende": {
+    "A": "Glutenhaltiges Getreide (Weizen, Roggen, Gerste, Hafer, Dinkel)",
+    "A1": "Weizen",
+    "A2": "Roggen",
+    "A3": "Dinkel",
+    "B": "Krebstiere",
+    "C": "Eier",
+    "D": "Fisch",
+    "E": "Erdnüsse",
+    "F": "Soja",
+    "G": "Milch/Laktose",
+    "H": "Schalenfrüchte",
+    "H1": "Mandeln",
+    "H2": "Haselnüsse",
+    "H3": "Walnüsse",
+    "I": "Sellerie",
+    "J": "Senf",
+    "K": "Sesam",
+    "L": "Schwefeldioxid/Sulfite",
+    "M": "Lupine",
+    "N": "Weichtiere"
+  },
   "backwaren": [
     {
       "id": "weizenbroetchen",
@@ -7,12 +29,11 @@
       "einheit": "Stück",
       "typ": "teigling",
       "preis": 0.45,
-      "typische_menge": {
-        "min": 30,
-        "max": 150,
-        "einheit": "Stück"
-      },
-      "kategorie": "Brötchen"
+      "typische_menge": { "min": 30, "max": 150, "einheit": "Stück" },
+      "kategorie": "Brötchen",
+      "allergene": ["A1", "G"],
+      "zutaten": ["Weizenmehl", "Wasser", "Hefe", "Salz", "Zucker", "Butter", "Malz"],
+      "kann_enthalten": ["K", "F"]
     },
     {
       "id": "mohnbroetchen",
@@ -21,12 +42,11 @@
       "einheit": "Stück",
       "typ": "teigling",
       "preis": 0.50,
-      "typische_menge": {
-        "min": 10,
-        "max": 60,
-        "einheit": "Stück"
-      },
-      "kategorie": "Brötchen"
+      "typische_menge": { "min": 10, "max": 60, "einheit": "Stück" },
+      "kategorie": "Brötchen",
+      "allergene": ["A1", "G"],
+      "zutaten": ["Weizenmehl", "Wasser", "Mohn", "Hefe", "Salz", "Butter", "Malz"],
+      "kann_enthalten": ["K", "F"]
     },
     {
       "id": "sesambroetchen",
@@ -35,12 +55,11 @@
       "einheit": "Stück",
       "typ": "teigling",
       "preis": 0.50,
-      "typische_menge": {
-        "min": 10,
-        "max": 60,
-        "einheit": "Stück"
-      },
-      "kategorie": "Brötchen"
+      "typische_menge": { "min": 10, "max": 60, "einheit": "Stück" },
+      "kategorie": "Brötchen",
+      "allergene": ["A1", "K", "G"],
+      "zutaten": ["Weizenmehl", "Wasser", "Sesam", "Hefe", "Salz", "Butter", "Malz"],
+      "kann_enthalten": ["F"]
     },
     {
       "id": "koernerbroetchen",
@@ -49,12 +68,11 @@
       "einheit": "Stück",
       "typ": "teigling",
       "preis": 0.55,
-      "typische_menge": {
-        "min": 15,
-        "max": 80,
-        "einheit": "Stück"
-      },
-      "kategorie": "Brötchen"
+      "typische_menge": { "min": 15, "max": 80, "einheit": "Stück" },
+      "kategorie": "Brötchen",
+      "allergene": ["A1", "A2", "K", "G"],
+      "zutaten": ["Weizenmehl", "Roggenmehl", "Sonnenblumenkerne", "Leinsamen", "Sesam", "Hefe", "Salz", "Butter"],
+      "kann_enthalten": ["H", "F", "M"]
     },
     {
       "id": "laugenbrezel",
@@ -63,12 +81,11 @@
       "einheit": "Stück",
       "typ": "teigling",
       "preis": 0.95,
-      "typische_menge": {
-        "min": 10,
-        "max": 60,
-        "einheit": "Stück"
-      },
-      "kategorie": "Laugengebäck"
+      "typische_menge": { "min": 10, "max": 60, "einheit": "Stück" },
+      "kategorie": "Laugengebäck",
+      "allergene": ["A1", "G"],
+      "zutaten": ["Weizenmehl", "Wasser", "Butter", "Hefe", "Salz", "Natronlauge", "Malz"],
+      "kann_enthalten": ["C", "K", "F"]
     },
     {
       "id": "laugenstange",
@@ -77,12 +94,11 @@
       "einheit": "Stück",
       "typ": "teigling",
       "preis": 0.85,
-      "typische_menge": {
-        "min": 10,
-        "max": 50,
-        "einheit": "Stück"
-      },
-      "kategorie": "Laugengebäck"
+      "typische_menge": { "min": 10, "max": 50, "einheit": "Stück" },
+      "kategorie": "Laugengebäck",
+      "allergene": ["A1", "G"],
+      "zutaten": ["Weizenmehl", "Wasser", "Butter", "Hefe", "Salz", "Natronlauge", "Malz"],
+      "kann_enthalten": ["C", "K", "F"]
     },
     {
       "id": "croissant",
@@ -91,12 +107,11 @@
       "einheit": "Stück",
       "typ": "teigling",
       "preis": 1.80,
-      "typische_menge": {
-        "min": 10,
-        "max": 50,
-        "einheit": "Stück"
-      },
-      "kategorie": "Feingebäck"
+      "typische_menge": { "min": 10, "max": 50, "einheit": "Stück" },
+      "kategorie": "Feingebäck",
+      "allergene": ["A1", "C", "G"],
+      "zutaten": ["Weizenmehl", "Butter", "Eier", "Zucker", "Hefe", "Milch", "Salz"],
+      "kann_enthalten": ["F"]
     },
     {
       "id": "rosinenschnecke",
@@ -105,12 +120,11 @@
       "einheit": "Stück",
       "typ": "teigling",
       "preis": 1.60,
-      "typische_menge": {
-        "min": 5,
-        "max": 30,
-        "einheit": "Stück"
-      },
-      "kategorie": "Feingebäck"
+      "typische_menge": { "min": 5, "max": 30, "einheit": "Stück" },
+      "kategorie": "Feingebäck",
+      "allergene": ["A1", "C", "G", "L"],
+      "zutaten": ["Weizenmehl", "Butter", "Eier", "Zucker", "Rosinen", "Milch", "Hefe", "Zimt"],
+      "kann_enthalten": ["H", "F"]
     },
     {
       "id": "nussschnecke",
@@ -119,12 +133,11 @@
       "einheit": "Stück",
       "typ": "teigling",
       "preis": 1.60,
-      "typische_menge": {
-        "min": 5,
-        "max": 25,
-        "einheit": "Stück"
-      },
-      "kategorie": "Feingebäck"
+      "typische_menge": { "min": 5, "max": 25, "einheit": "Stück" },
+      "kategorie": "Feingebäck",
+      "allergene": ["A1", "C", "G", "H2"],
+      "zutaten": ["Weizenmehl", "Butter", "Eier", "Haselnüsse", "Zucker", "Milch", "Hefe", "Zimt"],
+      "kann_enthalten": ["H1", "H3", "F"]
     },
     {
       "id": "apfeltasche",
@@ -133,12 +146,11 @@
       "einheit": "Stück",
       "typ": "teigling",
       "preis": 1.70,
-      "typische_menge": {
-        "min": 5,
-        "max": 25,
-        "einheit": "Stück"
-      },
-      "kategorie": "Feingebäck"
+      "typische_menge": { "min": 5, "max": 25, "einheit": "Stück" },
+      "kategorie": "Feingebäck",
+      "allergene": ["A1", "C", "G"],
+      "zutaten": ["Weizenmehl", "Butter", "Eier", "Äpfel", "Zucker", "Zimt", "Zitronensaft"],
+      "kann_enthalten": ["H", "F"]
     },
     {
       "id": "berliner",
@@ -147,12 +159,11 @@
       "einheit": "Stück",
       "typ": "teigling",
       "preis": 1.40,
-      "typische_menge": {
-        "min": 10,
-        "max": 40,
-        "einheit": "Stück"
-      },
-      "kategorie": "Feingebäck"
+      "typische_menge": { "min": 10, "max": 40, "einheit": "Stück" },
+      "kategorie": "Feingebäck",
+      "allergene": ["A1", "C", "G"],
+      "zutaten": ["Weizenmehl", "Eier", "Butter", "Zucker", "Milch", "Hefe", "Erdbeerkonfitüre", "Puderzucker"],
+      "kann_enthalten": ["L", "F"]
     },
     {
       "id": "mischbrot",
@@ -161,12 +172,11 @@
       "einheit": "Stück",
       "typ": "fertig",
       "preis": 3.90,
-      "typische_menge": {
-        "min": 5,
-        "max": 25,
-        "einheit": "Stück"
-      },
-      "kategorie": "Brot"
+      "typische_menge": { "min": 5, "max": 25, "einheit": "Stück" },
+      "kategorie": "Brot",
+      "allergene": ["A1", "A2"],
+      "zutaten": ["Weizenmehl", "Roggenmehl", "Wasser", "Sauerteig", "Hefe", "Salz"],
+      "kann_enthalten": ["K", "F"]
     },
     {
       "id": "dinkelbrot",
@@ -175,12 +185,11 @@
       "einheit": "Stück",
       "typ": "fertig",
       "preis": 4.50,
-      "typische_menge": {
-        "min": 3,
-        "max": 15,
-        "einheit": "Stück"
-      },
-      "kategorie": "Brot"
+      "typische_menge": { "min": 3, "max": 15, "einheit": "Stück" },
+      "kategorie": "Brot",
+      "allergene": ["A3"],
+      "zutaten": ["Dinkelvollkornmehl", "Wasser", "Sauerteig", "Hefe", "Salz", "Sonnenblumenkerne"],
+      "kann_enthalten": ["A1", "K", "F"]
     },
     {
       "id": "krustenbrot",
@@ -189,12 +198,11 @@
       "einheit": "Stück",
       "typ": "fertig",
       "preis": 4.20,
-      "typische_menge": {
-        "min": 3,
-        "max": 15,
-        "einheit": "Stück"
-      },
-      "kategorie": "Brot"
+      "typische_menge": { "min": 3, "max": 15, "einheit": "Stück" },
+      "kategorie": "Brot",
+      "allergene": ["A1", "A2"],
+      "zutaten": ["Weizenmehl", "Roggenmehl", "Wasser", "Sauerteig", "Hefe", "Salz", "Malz"],
+      "kann_enthalten": ["K", "F"]
     },
     {
       "id": "roggenbrot",
@@ -203,12 +211,11 @@
       "einheit": "Stück",
       "typ": "fertig",
       "preis": 4.30,
-      "typische_menge": {
-        "min": 3,
-        "max": 12,
-        "einheit": "Stück"
-      },
-      "kategorie": "Brot"
+      "typische_menge": { "min": 3, "max": 12, "einheit": "Stück" },
+      "kategorie": "Brot",
+      "allergene": ["A2"],
+      "zutaten": ["Roggenvollkornmehl", "Wasser", "Roggensauerteig", "Salz"],
+      "kann_enthalten": ["A1", "K"]
     },
     {
       "id": "toastbrot",
@@ -217,12 +224,11 @@
       "einheit": "Stück",
       "typ": "fertig",
       "preis": 2.90,
-      "typische_menge": {
-        "min": 3,
-        "max": 15,
-        "einheit": "Stück"
-      },
-      "kategorie": "Brot"
+      "typische_menge": { "min": 3, "max": 15, "einheit": "Stück" },
+      "kategorie": "Brot",
+      "allergene": ["A1", "G"],
+      "zutaten": ["Weizenmehl", "Wasser", "Butter", "Zucker", "Milchpulver", "Hefe", "Salz"],
+      "kann_enthalten": ["C", "F"]
     },
     {
       "id": "erdbeertorte",
@@ -231,12 +237,11 @@
       "einheit": "Stück",
       "typ": "fertig",
       "preis": 24.90,
-      "typische_menge": {
-        "min": 1,
-        "max": 5,
-        "einheit": "Stück"
-      },
-      "kategorie": "Torten & Kuchen"
+      "typische_menge": { "min": 1, "max": 5, "einheit": "Stück" },
+      "kategorie": "Torten & Kuchen",
+      "allergene": ["A1", "C", "G"],
+      "zutaten": ["Weizenmehl", "Eier", "Butter", "Zucker", "Sahne", "Erdbeeren", "Gelatine", "Vanille"],
+      "kann_enthalten": ["H", "F"]
     },
     {
       "id": "kaesekuchen",
@@ -245,12 +250,11 @@
       "einheit": "Stück",
       "typ": "fertig",
       "preis": 22.90,
-      "typische_menge": {
-        "min": 1,
-        "max": 5,
-        "einheit": "Stück"
-      },
-      "kategorie": "Torten & Kuchen"
+      "typische_menge": { "min": 1, "max": 5, "einheit": "Stück" },
+      "kategorie": "Torten & Kuchen",
+      "allergene": ["A1", "C", "G"],
+      "zutaten": ["Quark", "Eier", "Zucker", "Weizenmehl", "Butter", "Grieß", "Vanille", "Zitrone"],
+      "kann_enthalten": ["F"]
     },
     {
       "id": "marmorkuchen",
@@ -259,12 +263,11 @@
       "einheit": "Stück",
       "typ": "fertig",
       "preis": 19.90,
-      "typische_menge": {
-        "min": 1,
-        "max": 4,
-        "einheit": "Stück"
-      },
-      "kategorie": "Torten & Kuchen"
+      "typische_menge": { "min": 1, "max": 4, "einheit": "Stück" },
+      "kategorie": "Torten & Kuchen",
+      "allergene": ["A1", "C", "G"],
+      "zutaten": ["Weizenmehl", "Eier", "Butter", "Zucker", "Kakao", "Milch", "Backpulver", "Vanille"],
+      "kann_enthalten": ["H", "F"]
     },
     {
       "id": "bienenstich",
@@ -273,12 +276,11 @@
       "einheit": "Stück",
       "typ": "fertig",
       "preis": 21.90,
-      "typische_menge": {
-        "min": 1,
-        "max": 4,
-        "einheit": "Stück"
-      },
-      "kategorie": "Torten & Kuchen"
+      "typische_menge": { "min": 1, "max": 4, "einheit": "Stück" },
+      "kategorie": "Torten & Kuchen",
+      "allergene": ["A1", "C", "G", "H1"],
+      "zutaten": ["Weizenmehl", "Eier", "Butter", "Zucker", "Mandeln", "Sahne", "Vanillepudding", "Honig"],
+      "kann_enthalten": ["H2", "H3", "F"]
     },
     {
       "id": "aufschnitt-sortiment",
@@ -287,12 +289,11 @@
       "einheit": "Packung",
       "typ": "fertig",
       "preis": 4.50,
-      "typische_menge": {
-        "min": 1,
-        "max": 5,
-        "einheit": "Packung"
-      },
-      "kategorie": "Belegware"
+      "typische_menge": { "min": 1, "max": 5, "einheit": "Packung" },
+      "kategorie": "Belegware",
+      "allergene": ["J"],
+      "zutaten": ["Schweinefleisch", "Rindfleisch", "Salz", "Gewürze", "Senf"],
+      "kann_enthalten": ["G", "I", "L"]
     },
     {
       "id": "kaese-sortiment",
@@ -301,12 +302,11 @@
       "einheit": "Packung",
       "typ": "fertig",
       "preis": 3.90,
-      "typische_menge": {
-        "min": 1,
-        "max": 5,
-        "einheit": "Packung"
-      },
-      "kategorie": "Belegware"
+      "typische_menge": { "min": 1, "max": 5, "einheit": "Packung" },
+      "kategorie": "Belegware",
+      "allergene": ["G"],
+      "zutaten": ["Milch", "Salz", "Lab", "Milchsäurekulturen"],
+      "kann_enthalten": []
     }
   ],
   "rohstoffe": [
@@ -315,11 +315,7 @@
       "name": "Weizenmehl Typ 550",
       "aliase": ["WM 550", "WM550", "WM5", "Weizen 550", "Weizenmehl", "Mehl 550"],
       "einheit": "Sack (25kg)",
-      "typische_menge": {
-        "min": 2,
-        "max": 10,
-        "einheit": "Sack"
-      },
+      "typische_menge": { "min": 2, "max": 10, "einheit": "Sack" },
       "kategorie": "Mehl"
     },
     {
@@ -327,11 +323,7 @@
       "name": "Roggenmehl Typ 1150",
       "aliase": ["RM 1150", "RM1150", "RM11", "Roggen 1150", "Roggenmehl"],
       "einheit": "Sack (25kg)",
-      "typische_menge": {
-        "min": 1,
-        "max": 8,
-        "einheit": "Sack"
-      },
+      "typische_menge": { "min": 1, "max": 8, "einheit": "Sack" },
       "kategorie": "Mehl"
     },
     {
@@ -339,11 +331,7 @@
       "name": "Frischhefe",
       "aliase": ["Hefe", "Hese", "Frischhefe", "Backhefe"],
       "einheit": "Würfel (42g)",
-      "typische_menge": {
-        "min": 5,
-        "max": 40,
-        "einheit": "Würfel"
-      },
+      "typische_menge": { "min": 5, "max": 40, "einheit": "Würfel" },
       "kategorie": "Triebmittel"
     },
     {
@@ -351,11 +339,7 @@
       "name": "Butter",
       "aliase": ["Butter", "Deutsche Markenbutter", "DB"],
       "einheit": "Block (250g)",
-      "typische_menge": {
-        "min": 5,
-        "max": 30,
-        "einheit": "Block"
-      },
+      "typische_menge": { "min": 5, "max": 30, "einheit": "Block" },
       "kategorie": "Milchprodukte"
     },
     {
@@ -363,11 +347,7 @@
       "name": "Eier (Freiland, Größe M)",
       "aliase": ["Eier", "Ei", "Freilandeier"],
       "einheit": "Karton (360 Stück)",
-      "typische_menge": {
-        "min": 1,
-        "max": 5,
-        "einheit": "Karton"
-      },
+      "typische_menge": { "min": 1, "max": 5, "einheit": "Karton" },
       "kategorie": "Eier"
     },
     {
@@ -375,11 +355,7 @@
       "name": "Schlagsahne",
       "aliase": ["Sahne", "Schlagsahne", "Rahm"],
       "einheit": "Packung (1L)",
-      "typische_menge": {
-        "min": 2,
-        "max": 15,
-        "einheit": "Packung"
-      },
+      "typische_menge": { "min": 2, "max": 15, "einheit": "Packung" },
       "kategorie": "Milchprodukte"
     },
     {
@@ -387,11 +363,7 @@
       "name": "Zucker (fein)",
       "aliase": ["Zucker", "Feinzucker", "Kristallzucker"],
       "einheit": "Sack (25kg)",
-      "typische_menge": {
-        "min": 1,
-        "max": 4,
-        "einheit": "Sack"
-      },
+      "typische_menge": { "min": 1, "max": 4, "einheit": "Sack" },
       "kategorie": "Zucker"
     },
     {
@@ -399,11 +371,7 @@
       "name": "Backmargarine",
       "aliase": ["Margarine", "Marg", "Backmargarine", "Ziehfett"],
       "einheit": "Platte (2,5kg)",
-      "typische_menge": {
-        "min": 2,
-        "max": 10,
-        "einheit": "Platte"
-      },
+      "typische_menge": { "min": 2, "max": 10, "einheit": "Platte" },
       "kategorie": "Fette"
     }
   ]
