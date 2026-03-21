@@ -1,7 +1,8 @@
 // ============================================================
 // App-Konfiguration – Name hier ändern, ändert sich überall
 // ============================================================
-export const APP_NAME = 'UTE';\nexport const APP_SUBTITLE = 'Unmittelbare Thekenkommunikation';
+export const APP_NAME = 'UTE';
+export const APP_SUBTITLE = 'Unmittelbare Thekenkommunikation';
 
 // API Base URL (Vite proxy leitet /api an Express weiter)
 export const API_BASE = '/api';
