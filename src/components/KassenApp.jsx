@@ -1,21 +1,19 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { ChevronLeft, ChevronRight, Mic, MicOff, Check, X, AlertTriangle, User, ShoppingCart, Coffee, CreditCard, Banknote, Leaf } from 'lucide-react'
 import { transkribiere, erkenneSprache, speichereKassenBestellung, ladeKatalog } from '../services/api'
-import { UTELogo, UTEMascot } from './ute-logo'
 
 // ============================================================
 // PRODUKT-KATEGORIEN (für Touchscreen-Buttons)
 // ============================================================
 const KATEGORIEN = [
-  { id: 'alle', label: 'Alle' },
-  { id: 'Brötchen', label: 'Brötchen' },
-  { id: 'Laugengebäck', label: 'Laugen' },
-  { id: 'Feingebäck', label: 'Süßes' },
-  { id: 'Brot', label: 'Brot' },
-  { id: 'Torten & Kuchen', label: 'Kuchen' },
-  { id: 'Snacks', label: 'Snacks' },
-  { id: 'Belegware', label: 'Belag' },
-  { id: 'Heißgetränke', label: 'Getränke' },
+  { id: 'alle', label: 'Alle', icon: '🛒' },
+  { id: 'Brötchen', label: 'Brötchen', icon: '🥐' },
+  { id: 'Laugengebäck', label: 'Laugen', icon: '🥨' },
+  { id: 'Feingebäck', label: 'Süßes', icon: '🍰' },
+  { id: 'Brot', label: 'Brot', icon: '🍞' },
+  { id: 'Torten & Kuchen', label: 'Kuchen', icon: '🎂' },
+  { id: 'Snacks', label: 'Snacks', icon: '🥗' },
+  { id: 'Belegware', label: 'Belag', icon: '🧀' },
+  { id: 'Heißgetränke', label: 'Getränke', icon: '☕' },
 ]
 
 // Stammkunden (Daten von den Bäckerinnen)
@@ -261,7 +259,6 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
   // Produkte aus Katalog
   const [produkte, setProdukte] = useState([])
   const [aktiveKategorie, setAktiveKategorie] = useState('alle')
-  const [produkteExpanded, setProdukteExpanded] = useState(false)
 
   // Bestellliste
   const [positionen, setPositionen] = useState([])
@@ -707,12 +704,10 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
   // ── BESTÄTIGT SCREEN ──
   if (abgeschlossen) {
     return (
-      <div className="min-h-screen bg-ute-cream flex flex-col items-center justify-center p-6">
-        <div className="w-24 h-24 rounded-full bg-ute-sage-light flex items-center justify-center mb-6">
-          <Check size={48} className="text-ute-sage" />
-        </div>
-        <h2 className="text-3xl font-bold text-ute-charcoal mb-2">Bestellung abgeschlossen!</h2>
-        <p className="text-ute-taupe text-lg mb-2">
+      <div className="min-h-screen bg-baeckerei-bg flex flex-col items-center justify-center p-6">
+        <div className="w-24 h-24 rounded-full bg-green-100 flex items-center justify-center text-5xl mb-6">✅</div>
+        <h2 className="text-3xl font-bold text-baeckerei-text mb-2">Bestellung abgeschlossen!</h2>
+        <p className="text-baeckerei-text-secondary text-lg mb-2">
           {positionen.length} Position{positionen.length !== 1 ? 'en' : ''} · {formatPreis(gesamtpreis)} · {zahlart === 'bar' ? 'Barzahlung' : 'Kartenzahlung'}
         </p>
         <div className="w-full max-w-md bg-white rounded-2xl border border-stone-200 divide-y divide-stone-100 my-6">
@@ -722,13 +717,13 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
               <span className="font-semibold">{formatPreis(p.preis_gesamt)}</span>
             </div>
           ))}
-          <div className="flex justify-between px-5 py-3 bg-ute-cream font-bold text-lg">
+          <div className="flex justify-between px-5 py-3 bg-stone-50 font-bold text-lg">
             <span>Gesamt</span>
-            <span className="text-ute-terracotta">{formatPreis(gesamtpreis)}</span>
+            <span className="text-baeckerei-accent">{formatPreis(gesamtpreis)}</span>
           </div>
         </div>
         <button onClick={neueBestellung}
-          className="px-8 py-4 rounded-2xl bg-ute-terracotta hover:bg-ute-terracotta-light text-white text-xl font-bold shadow-lg">
+          className="px-8 py-4 rounded-2xl bg-baeckerei-accent hover:bg-baeckerei-accent-hover text-white text-xl font-bold shadow-lg">
           Nächster Kunde
         </button>
       </div>
@@ -737,41 +732,36 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
 
   // ── HAUPT-LAYOUT ──
   return (
-    <div className="h-screen bg-ute-cream flex flex-col overflow-hidden">
+    <div className="h-screen bg-baeckerei-bg flex flex-col overflow-hidden">
       {/* ═══ HEADER ═══ */}
-      <header className="bg-ute-warm-white border-b border-stone-200 px-4 py-2 flex items-center justify-between flex-shrink-0">
+      <header className="bg-white border-b border-stone-200 px-4 py-2 flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-3">
-          <button onClick={() => setProdukteExpanded(prev => !prev)}
-            className="w-8 h-8 rounded-lg bg-ute-cream hover:bg-stone-200 flex items-center justify-center text-ute-taupe transition-colors"
-            title={produkteExpanded ? 'Produkte einklappen' : 'Produkte ausklappen'}>
-            {produkteExpanded ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
-          </button>
-          <UTELogo size={28} />
+          <span className="text-2xl">🥐</span>
           <div>
-            <h1 className="text-lg font-bold text-ute-charcoal">UTE Kasse</h1>
-            <p className="text-xs text-ute-taupe">Hallo, {mitarbeiter?.name}</p>
+            <h1 className="text-lg font-bold text-baeckerei-text">UTE Kasse</h1>
+            <p className="text-xs text-baeckerei-text-secondary">Hallo, {mitarbeiter?.name}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
           {/* Allergen-Check Button */}
           <button onClick={() => setAllergenCheck(true)}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-ute-dusty-rose-light/40 border border-ute-dusty-rose text-ute-charcoal text-sm font-medium hover:bg-ute-dusty-rose-light/60">
-            <AlertTriangle size={14} /> Allergene
+            className="px-3 py-2 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm font-medium hover:bg-red-100">
+            ⚠️ Allergene
           </button>
           {/* Besonderheiten-Button */}
           <button onClick={() => setBesonderheitenPopup(true)}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium ${aktiveBesonderheiten.size > 0
-              ? 'bg-ute-sage-light border border-ute-sage text-ute-charcoal'
-              : 'bg-ute-sage-light/40 border border-ute-sage/40 text-ute-charcoal hover:bg-ute-sage-light/60'}`}>
-            <Leaf size={14} /> Besonderheiten{aktiveBesonderheiten.size > 0 ? ` (${aktiveBesonderheiten.size})` : ''}
+            className={`px-3 py-2 rounded-xl text-sm font-medium ${aktiveBesonderheiten.size > 0
+              ? 'bg-green-100 border border-green-400 text-green-800'
+              : 'bg-green-50 border border-green-200 text-green-700 hover:bg-green-100'}`}>
+            🌿 Besonderheiten{aktiveBesonderheiten.size > 0 ? ` (${aktiveBesonderheiten.size})` : ''}
           </button>
           {/* Stammkunde-Button */}
           <button onClick={() => setStammkundePopup(true)}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-ute-sage-light/40 border border-ute-sage/40 text-ute-charcoal text-sm font-medium hover:bg-ute-sage-light/60">
-            <User size={14} /> Stammkunde
+            className="px-3 py-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-sm font-medium hover:bg-amber-100">
+            👤 Stammkunde
           </button>
           <button onClick={onAbmelden}
-            className="text-sm text-ute-taupe hover:text-ute-charcoal underline">
+            className="text-sm text-baeckerei-text-secondary hover:text-baeckerei-text underline">
             Abmelden
           </button>
         </div>
@@ -781,30 +771,23 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
       {fehler && (
         <div className="mx-4 mt-2 bg-red-50 border border-red-200 rounded-xl p-3 text-red-700 text-sm flex justify-between items-center flex-shrink-0">
           <span>{fehler}</span>
-          <button onClick={() => setFehler(null)} className="text-red-400 hover:text-red-600 ml-2"><X size={16} /></button>
+          <button onClick={() => setFehler(null)} className="text-red-400 hover:text-red-600 ml-2">✕</button>
         </div>
       )}
 
       {/* ═══ HAUPTBEREICH ═══ */}
       <div className="flex-1 flex overflow-hidden">
 
-        {/* ── LINKE SEITE: PRODUKT-BUTTONS oder MASCOT ── */}
-        <div className={`flex flex-col border-r border-stone-200 overflow-hidden transition-all duration-300 ${produkteExpanded ? 'w-1/2' : 'w-48'}`}>
-        {!produkteExpanded ? (
-          <div className="flex-1 flex flex-col items-center justify-center bg-ute-cream p-4">
-            <UTEMascot size={120} />
-            <p className="text-sm text-ute-taupe mt-4 text-center">Produkte einblenden mit dem Pfeil oben links</p>
-          </div>
-        ) : (
-          <>
+        {/* ── LINKE SEITE: PRODUKT-BUTTONS ── */}
+        <div className="w-1/2 flex flex-col border-r border-stone-200 overflow-hidden">
           {/* Kategorie-Tabs */}
           <div className="flex gap-1 p-2 bg-stone-50 border-b border-stone-200 overflow-x-auto flex-shrink-0">
             {KATEGORIEN.map(kat => (
               <button key={kat.id} onClick={() => setAktiveKategorie(kat.id)}
                 className={`px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-colors
                   ${aktiveKategorie === kat.id
-                    ? 'bg-ute-terracotta text-white shadow-sm'
-                    : 'bg-white text-ute-taupe border border-stone-200 hover:border-ute-terracotta'
+                    ? 'bg-baeckerei-accent text-white shadow-sm'
+                    : 'bg-white text-baeckerei-text-secondary border border-stone-200 hover:border-baeckerei-accent'
                   }`}>
                 {kat.icon} {kat.label}
               </button>
@@ -814,14 +797,14 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
           {/* Allergen-Ausschluss-Banner */}
           {gesperrteAllergene.size > 0 && (
             <div className="mx-2 mt-2 bg-red-50 border border-red-200 rounded-xl p-2 flex items-center gap-2 flex-shrink-0">
-              <span className="text-sm text-red-700 font-medium whitespace-nowrap flex items-center gap-1"><AlertTriangle size={14} /> Ausschluss:</span>
+              <span className="text-sm text-red-700 font-medium whitespace-nowrap">⚠️ Ausschluss:</span>
               <div className="flex flex-wrap gap-1 flex-1">
                 {[...gesperrteAllergene].map(a => (
                   <span key={a} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-xs font-medium">
                     {ALLERGEN_ICONS[a]} {ALLERGEN_KURZ[a]}
                     <button onClick={() => setGesperrteAllergene(prev => {
                       const neu = new Set(prev); neu.delete(a); return neu
-                    })} className="ml-0.5 hover:text-red-900"><X size={12} /></button>
+                    })} className="ml-0.5 hover:text-red-900">✕</button>
                   </span>
                 ))}
               </div>
@@ -841,25 +824,25 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
                       className={`w-full rounded-xl border-2 p-3 text-left transition-all flex flex-col justify-between min-h-[80px]
                         ${istGesperrt
                           ? 'bg-stone-100 border-red-200 opacity-60'
-                          : 'bg-white border-stone-100 hover:border-ute-terracotta hover:shadow-sm active:bg-amber-50'
+                          : 'bg-white border-stone-100 hover:border-baeckerei-accent hover:shadow-sm active:bg-amber-50'
                         }`}>
-                      <span className={`font-medium text-sm leading-tight pr-6 ${istGesperrt ? 'text-stone-400' : 'text-ute-charcoal'}`}>
+                      <span className={`font-medium text-sm leading-tight pr-6 ${istGesperrt ? 'text-stone-400' : 'text-baeckerei-text'}`}>
                         {produkt.name || produkt.produkt_name}
                       </span>
                       {/* Bio/Vegan/Regional Tags */}
                       {(produkt.bio || produkt.vegan || produkt.regional) && (
                         <div className="flex gap-0.5 mt-0.5 flex-wrap">
-                          {produkt.bio && <span className="text-[0.625em] bg-green-100 text-green-700 px-1 rounded">🌱 Bio</span>}
-                          {produkt.vegan && <span className="text-[0.625em] bg-emerald-100 text-emerald-700 px-1 rounded">🥬 Vegan</span>}
-                          {produkt.regional && <span className="text-[0.625em] bg-blue-100 text-blue-700 px-1 rounded">📍 Regional</span>}
+                          {produkt.bio && <span className="text-[10px] bg-green-100 text-green-700 px-1 rounded">🌱 Bio</span>}
+                          {produkt.vegan && <span className="text-[10px] bg-emerald-100 text-emerald-700 px-1 rounded">🥬 Vegan</span>}
+                          {produkt.regional && <span className="text-[10px] bg-blue-100 text-blue-700 px-1 rounded">📍 Regional</span>}
                         </div>
                       )}
                       <div className="flex items-center gap-1 mt-1">
-                        <span className={`font-bold text-sm ${istGesperrt ? 'text-stone-400' : 'text-ute-terracotta'}`}>
+                        <span className={`font-bold text-sm ${istGesperrt ? 'text-stone-400' : 'text-baeckerei-accent'}`}>
                           {produkt.preis ? formatPreis(produkt.preis) : '—'}
                         </span>
                         {istGesperrt && (
-                          <span className="text-xs text-red-500 ml-auto font-medium"><AlertTriangle size={12} /></span>
+                          <span className="text-xs text-red-500 ml-auto font-medium">⚠️</span>
                         )}
                         {!istGesperrt && produkt.allergene?.length > 0 && (
                           <span className="text-xs text-stone-400 ml-auto">
@@ -874,7 +857,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
                         className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-stone-100 hover:bg-red-100
                                    text-stone-400 hover:text-red-600 text-xs flex items-center justify-center transition-colors"
                         title="Allergene & Zutaten">
-                        <span className="font-serif font-bold">i</span>
+                        ℹ️
                       </button>
                     )}
                   </div>
@@ -882,17 +865,15 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
               })}
             </div>
           </div>
-          </>
-        )}
         </div>
 
         {/* ── RECHTE SEITE: BESTELLLISTE ── */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="w-1/2 flex flex-col overflow-hidden">
           {/* Bestellpositionen */}
           <div className="flex-1 overflow-y-auto p-3">
             {anzeigePositionen.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-ute-taupe">
-                <ShoppingCart size={36} className="mb-3 text-ute-taupe" />
+              <div className="h-full flex flex-col items-center justify-center text-baeckerei-text-secondary">
+                <span className="text-4xl mb-3">🛒</span>
                 <p className="text-lg font-medium">Noch keine Positionen</p>
                 <p className="text-sm mt-1">Produkte links antippen oder Spracheingabe nutzen</p>
               </div>
@@ -913,12 +894,12 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
                       )}
                       {/* Produktname */}
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-ute-charcoal text-sm truncate">
+                        <p className="font-medium text-baeckerei-text text-sm truncate">
                           {pos.produkt_name}
                           {istLive && <span className="text-blue-500 text-xs ml-2">live erkannt</span>}
                         </p>
                         {pos.preis_pro_stueck != null && (
-                          <p className="text-xs text-ute-taupe">{formatPreis(pos.preis_pro_stueck)}/{pos.einheit || 'Stk.'}</p>
+                          <p className="text-xs text-baeckerei-text-secondary">{formatPreis(pos.preis_pro_stueck)}/{pos.einheit || 'Stk.'}</p>
                         )}
                       </div>
                       {/* Menge */}
@@ -927,20 +908,20 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
                           <button onClick={() => aendereMenge(idx, pos.menge - 1)}
                             className="w-8 h-8 rounded-lg bg-stone-100 hover:bg-stone-200 text-lg font-bold flex items-center justify-center">−</button>
                         )}
-                        <span className="w-8 text-center font-bold text-ute-charcoal">{pos.menge}</span>
+                        <span className="w-8 text-center font-bold text-baeckerei-text">{pos.menge}</span>
                         {!istLive && (
                           <button onClick={() => aendereMenge(idx, pos.menge + 1)}
                             className="w-8 h-8 rounded-lg bg-stone-100 hover:bg-stone-200 text-lg font-bold flex items-center justify-center">+</button>
                         )}
                       </div>
                       {/* Preis */}
-                      <span className="font-bold text-ute-charcoal w-16 text-right text-sm">
+                      <span className="font-bold text-baeckerei-text w-16 text-right text-sm">
                         {formatPreis(pos.preis_gesamt)}
                       </span>
                       {/* Löschen */}
                       {!istLive && (
                         <button onClick={() => entfernePosition(idx)}
-                          className="w-7 h-7 rounded-lg text-stone-300 hover:text-red-500 hover:bg-red-50 flex items-center justify-center"><X size={14} /></button>
+                          className="w-7 h-7 rounded-lg text-stone-300 hover:text-red-500 hover:bg-red-50 flex items-center justify-center text-sm">✕</button>
                       )}
                     </div>
                   )
@@ -952,14 +933,14 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
           {/* Cross-Selling Popup */}
           {crossSelling && (
             <div className="mx-3 mb-2 bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-center gap-3 flex-shrink-0">
-              <Coffee size={20} className="text-ute-terracotta flex-shrink-0" />
+              <span className="text-xl">☕</span>
               <p className="flex-1 text-sm text-amber-800">{crossSelling.text}</p>
               <button onClick={() => { produktHinzufuegen(crossSelling.produkt); setCrossSelling(null) }}
-                className="px-3 py-1.5 bg-ute-terracotta text-white rounded-lg text-sm font-medium hover:bg-ute-terracotta-light">
+                className="px-3 py-1.5 bg-baeckerei-accent text-white rounded-lg text-sm font-medium hover:bg-baeckerei-accent-hover">
                 Ja!
               </button>
               <button onClick={() => setCrossSelling(null)}
-                className="text-amber-400 hover:text-amber-600"><X size={16} /></button>
+                className="text-amber-400 hover:text-amber-600">✕</button>
             </div>
           )}
 
@@ -967,26 +948,26 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
           <div className="border-t border-stone-200 bg-white p-3 flex-shrink-0">
             {/* Gesamtpreis */}
             <div className="flex justify-between items-center mb-3">
-              <span className="text-lg font-bold text-ute-charcoal">Gesamt</span>
-              <span className="text-2xl font-bold text-ute-terracotta">{formatPreis(gesamtpreis)}</span>
+              <span className="text-lg font-bold text-baeckerei-text">Gesamt</span>
+              <span className="text-2xl font-bold text-baeckerei-accent">{formatPreis(gesamtpreis)}</span>
             </div>
             {/* Zahlart + Kassieren */}
             <div className="flex gap-2">
               <button onClick={() => setZahlart('bar')}
-                className={`flex-1 py-3 rounded-xl font-medium text-sm transition-colors flex items-center justify-center gap-1
-                  ${zahlart === 'bar' ? 'bg-green-100 border-2 border-green-400 text-green-800' : 'bg-stone-50 border-2 border-stone-200 text-ute-taupe'}`}>
-                <Banknote size={16} /> Bar
+                className={`flex-1 py-3 rounded-xl font-medium text-sm transition-colors
+                  ${zahlart === 'bar' ? 'bg-green-100 border-2 border-green-400 text-green-800' : 'bg-stone-50 border-2 border-stone-200 text-baeckerei-text-secondary'}`}>
+                💵 Bar
               </button>
               <button onClick={() => setZahlart('karte')}
-                className={`flex-1 py-3 rounded-xl font-medium text-sm transition-colors flex items-center justify-center gap-1
-                  ${zahlart === 'karte' ? 'bg-blue-100 border-2 border-blue-400 text-blue-800' : 'bg-stone-50 border-2 border-stone-200 text-ute-taupe'}`}>
-                <CreditCard size={16} /> Karte
+                className={`flex-1 py-3 rounded-xl font-medium text-sm transition-colors
+                  ${zahlart === 'karte' ? 'bg-blue-100 border-2 border-blue-400 text-blue-800' : 'bg-stone-50 border-2 border-stone-200 text-baeckerei-text-secondary'}`}>
+                💳 Karte
               </button>
               <button onClick={kassieren} disabled={positionen.length === 0}
-                className="flex-[2] py-3 rounded-xl bg-ute-terracotta hover:bg-ute-terracotta-light
+                className="flex-[2] py-3 rounded-xl bg-baeckerei-accent hover:bg-baeckerei-accent-hover
                            text-white text-lg font-bold shadow-md active:scale-95 transition-all
                            disabled:opacity-30 disabled:cursor-not-allowed">
-                <Check size={18} className="inline mr-1" /> Kassieren
+                Kassieren ✓
               </button>
             </div>
           </div>
@@ -999,10 +980,10 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
           <>
             <button onClick={starteAufnahme}
               className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-red-500 hover:bg-red-600 text-white font-semibold shadow-md active:scale-95 transition-all">
-              <Mic size={18} />
+              <span className="text-lg">🎙️</span>
               Spracheingabe
             </button>
-            <p className="text-sm text-ute-taupe">Gespräch aufnehmen – Bestellung wird automatisch erkannt</p>
+            <p className="text-sm text-baeckerei-text-secondary">Gespräch aufnehmen – Bestellung wird automatisch erkannt</p>
           </>
         )}
 
@@ -1012,20 +993,20 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
               <span className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
               <span className="font-semibold text-red-600 text-sm">Aufnahme {formatZeit(aufnahmeZeit)}</span>
             </div>
-            <div className="flex-1 bg-stone-50 rounded-xl px-3 py-2 text-sm text-ute-charcoal min-h-[40px] max-h-[60px] overflow-y-auto">
-              {liveText || <span className="text-ute-taupe italic">Warte auf Sprache…</span>}
+            <div className="flex-1 bg-stone-50 rounded-xl px-3 py-2 text-sm text-baeckerei-text min-h-[40px] max-h-[60px] overflow-y-auto">
+              {liveText || <span className="text-baeckerei-text-secondary italic">Warte auf Sprache…</span>}
             </div>
             <button onClick={stoppeAufnahme}
-              className="px-5 py-3 rounded-2xl bg-ute-terracotta hover:bg-ute-terracotta-light text-white font-semibold shadow-md active:scale-95 transition-all">
-              <Check size={16} className="inline" /> Fertig
+              className="px-5 py-3 rounded-2xl bg-baeckerei-accent hover:bg-baeckerei-accent-hover text-white font-semibold shadow-md active:scale-95 transition-all">
+              Fertig ✓
             </button>
           </>
         )}
 
         {verarbeitung && (
           <div className="flex items-center gap-3">
-            <div className="w-6 h-6 rounded-full border-2 border-ute-terracotta border-t-transparent animate-spin" />
-            <span className="text-sm text-ute-taupe">Bestellung wird erkannt…</span>
+            <div className="w-6 h-6 rounded-full border-2 border-baeckerei-accent border-t-transparent animate-spin" />
+            <span className="text-sm text-baeckerei-text-secondary">Bestellung wird erkannt…</span>
           </div>
         )}
       </div>
@@ -1034,29 +1015,29 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
       {stammkundePopup && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setStammkundePopup(false)}>
           <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <h3 className="text-lg font-bold text-ute-charcoal mb-4 flex items-center gap-2"><User size={20} /> Stammkunde auswählen</h3>
-            <p className="text-sm text-ute-taupe mb-4">Letzte Bestellung wird automatisch geladen</p>
+            <h3 className="text-lg font-bold text-baeckerei-text mb-4">👤 Stammkunde auswählen</h3>
+            <p className="text-sm text-baeckerei-text-secondary mb-4">Letzte Bestellung wird automatisch geladen</p>
             <div className="flex flex-col gap-3">
               {stammkundenListe.map(kunde => (
                 <button key={kunde.id} onClick={() => ladeStammkunde(kunde)}
-                  className="bg-stone-50 hover:bg-amber-50 border border-stone-200 hover:border-ute-terracotta rounded-xl p-4 text-left transition-colors">
-                  <p className="font-semibold text-ute-charcoal">{kunde.name}</p>
-                  <p className="text-xs text-ute-taupe mt-1">
+                  className="bg-stone-50 hover:bg-amber-50 border border-stone-200 hover:border-baeckerei-accent rounded-xl p-4 text-left transition-colors">
+                  <p className="font-semibold text-baeckerei-text">{kunde.name}</p>
+                  <p className="text-xs text-baeckerei-text-secondary mt-1">
                     Letzte: {kunde.letzte.map(p => `${p.menge}× ${p.name}`).join(', ')}
                   </p>
                   {kunde.allergie && (
-                    <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><AlertTriangle size={12} /> Allergie: {kunde.allergie}</p>
+                    <p className="text-xs text-red-500 mt-1">⚠️ Allergie: {kunde.allergie}</p>
                   )}
                 </button>
               ))}
             </div>
             {/* Neu anlegen Button */}
             <button onClick={() => { setStammkundePopup(false); setNeuerStammkundePopup(true) }}
-              className="w-full mt-3 py-3 bg-ute-terracotta/10 hover:bg-ute-terracotta/20 text-ute-terracotta font-semibold rounded-xl border-2 border-dashed border-ute-terracotta/40 transition-colors">
+              className="w-full mt-3 py-3 bg-baeckerei-accent/10 hover:bg-baeckerei-accent/20 text-baeckerei-accent font-semibold rounded-xl border-2 border-dashed border-baeckerei-accent/40 transition-colors">
               + Neuen Stammkunden anlegen
             </button>
             <button onClick={() => setStammkundePopup(false)}
-              className="w-full mt-2 py-2 text-ute-taupe text-sm hover:text-ute-charcoal">
+              className="w-full mt-2 py-2 text-baeckerei-text-secondary text-sm hover:text-baeckerei-text">
               Abbrechen
             </button>
           </div>
@@ -1067,34 +1048,34 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
       {neuerStammkundePopup && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setNeuerStammkundePopup(false)}>
           <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
-            <h3 className="text-lg font-bold text-ute-charcoal mb-4 flex items-center gap-2"><User size={20} /> Neuen Stammkunden anlegen</h3>
+            <h3 className="text-lg font-bold text-baeckerei-text mb-4">👤 Neuen Stammkunden anlegen</h3>
             {positionen.length > 0 ? (
-              <p className="text-sm text-green-600 mb-4 flex items-center gap-1"><Check size={14} /> Aktuelle Bestellung ({positionen.length} Positionen) wird als "wie immer" gespeichert</p>
+              <p className="text-sm text-green-600 mb-4">✓ Aktuelle Bestellung ({positionen.length} Positionen) wird als "wie immer" gespeichert</p>
             ) : (
               <p className="text-sm text-orange-500 mb-4">⚠ Noch keine Produkte in der Bestellung — erst bestellen, dann Stammkunde anlegen!</p>
             )}
             <div className="flex flex-col gap-3">
               <div>
-                <label className="text-sm font-medium text-ute-charcoal">Name *</label>
+                <label className="text-sm font-medium text-baeckerei-text">Name *</label>
                 <input type="text" value={neuerStammkundeName} onChange={e => setNeuerStammkundeName(e.target.value)}
                   placeholder="z.B. Frau Müller"
-                  className="w-full mt-1 px-3 py-2 rounded-lg border border-stone-300 focus:border-ute-terracotta focus:outline-none text-sm" />
+                  className="w-full mt-1 px-3 py-2 rounded-lg border border-stone-300 focus:border-baeckerei-accent focus:outline-none text-sm" />
               </div>
               <div>
-                <label className="text-sm font-medium text-ute-charcoal">Allergie (optional)</label>
+                <label className="text-sm font-medium text-baeckerei-text">Allergie (optional)</label>
                 <input type="text" value={neuerStammkundeAllergie} onChange={e => setNeuerStammkundeAllergie(e.target.value)}
                   placeholder="z.B. Sesam, Nüsse"
-                  className="w-full mt-1 px-3 py-2 rounded-lg border border-stone-300 focus:border-ute-terracotta focus:outline-none text-sm" />
+                  className="w-full mt-1 px-3 py-2 rounded-lg border border-stone-300 focus:border-baeckerei-accent focus:outline-none text-sm" />
               </div>
             </div>
             <div className="flex gap-2 mt-4">
               <button onClick={() => setNeuerStammkundePopup(false)}
-                className="flex-1 py-2 text-ute-taupe text-sm border border-stone-200 rounded-lg hover:bg-stone-50">
+                className="flex-1 py-2 text-baeckerei-text-secondary text-sm border border-stone-200 rounded-lg hover:bg-stone-50">
                 Abbrechen
               </button>
               <button onClick={stammkundeAnlegen}
                 disabled={!neuerStammkundeName.trim() || positionen.length === 0}
-                className="flex-1 py-2 bg-ute-terracotta text-white font-semibold rounded-lg hover:bg-amber-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                className="flex-1 py-2 bg-baeckerei-accent text-white font-semibold rounded-lg hover:bg-amber-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
                 Speichern
               </button>
             </div>
@@ -1108,16 +1089,16 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
           <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-start justify-between mb-4">
               <div>
-                <h3 className="text-lg font-bold text-ute-charcoal">{allergenInfo.name || allergenInfo.produkt_name}</h3>
-                <p className="text-sm text-ute-taupe">{allergenInfo.kategorie}</p>
+                <h3 className="text-lg font-bold text-baeckerei-text">{allergenInfo.name || allergenInfo.produkt_name}</h3>
+                <p className="text-sm text-baeckerei-text-secondary">{allergenInfo.kategorie}</p>
               </div>
-              <button onClick={() => setAllergenInfo(null)} className="text-stone-400 hover:text-stone-600"><X size={20} /></button>
+              <button onClick={() => setAllergenInfo(null)} className="text-stone-400 hover:text-stone-600 text-xl">✕</button>
             </div>
 
             {/* Allergene */}
             {allergenInfo.allergene?.length > 0 && (
               <div className="mb-4">
-                <h4 className="text-sm font-semibold text-red-700 mb-2 flex items-center gap-1"><AlertTriangle size={14} /> Enthält (Allergene)</h4>
+                <h4 className="text-sm font-semibold text-red-700 mb-2">⚠️ Enthält (Allergene)</h4>
                 <div className="flex flex-wrap gap-1.5">
                   {allergenInfo.allergene.map(a => (
                     <span key={a} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs font-medium">
@@ -1131,7 +1112,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
             {/* Kann Spuren enthalten */}
             {allergenInfo.kann_enthalten?.length > 0 && (
               <div className="mb-4">
-                <h4 className="text-sm font-semibold text-amber-700 mb-2">Kann Spuren enthalten</h4>
+                <h4 className="text-sm font-semibold text-amber-700 mb-2">⚡ Kann Spuren enthalten</h4>
                 <div className="flex flex-wrap gap-1.5">
                   {allergenInfo.kann_enthalten.map(a => (
                     <span key={a} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-200 text-amber-700 text-xs font-medium">
@@ -1145,8 +1126,8 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
             {/* Zutaten */}
             {allergenInfo.zutaten?.length > 0 && (
               <div className="mb-4">
-                <h4 className="text-sm font-semibold text-ute-charcoal mb-2">Zutaten</h4>
-                <p className="text-sm text-ute-taupe leading-relaxed">
+                <h4 className="text-sm font-semibold text-baeckerei-text mb-2">📋 Zutaten</h4>
+                <p className="text-sm text-baeckerei-text-secondary leading-relaxed">
                   {allergenInfo.zutaten.join(', ')}
                 </p>
               </div>
@@ -1155,7 +1136,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
             {/* Allergen-Legende Link */}
             {allergenInfo.allergene?.length > 0 && (
               <div className="mt-4 pt-3 border-t border-stone-100">
-                <p className="text-xs text-ute-taupe">
+                <p className="text-xs text-baeckerei-text-secondary">
                   {allergenInfo.allergene.map(a => `${a}: ${allergenLegende[a] || ALLERGEN_KURZ[a] || a}`).join(' · ')}
                 </p>
               </div>
@@ -1170,17 +1151,17 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
           <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-start justify-between mb-4">
               <div>
-                <h3 className="text-lg font-bold text-ute-charcoal flex items-center gap-2"><AlertTriangle size={20} className="text-red-600" /> Allergen-Check</h3>
-                <p className="text-sm text-ute-taupe">
+                <h3 className="text-lg font-bold text-baeckerei-text">⚠️ Allergen-Check</h3>
+                <p className="text-sm text-baeckerei-text-secondary">
                   {positionen.length > 0 ? 'Allergene in der aktuellen Bestellung' : 'Keine Positionen in der Bestellung'}
                 </p>
               </div>
-              <button onClick={() => setAllergenCheck(false)} className="text-stone-400 hover:text-stone-600"><X size={20} /></button>
+              <button onClick={() => setAllergenCheck(false)} className="text-stone-400 hover:text-stone-600 text-xl">✕</button>
             </div>
 
             {/* Schnellfilter: Allergene per Tap ausschließen */}
             <div className="mb-4 p-3 bg-stone-50 rounded-xl">
-              <h4 className="text-xs font-semibold text-ute-charcoal mb-2">Allergene ausschließen (Produkte werden ausgegraut)</h4>
+              <h4 className="text-xs font-semibold text-baeckerei-text mb-2">🚫 Allergene ausschließen (Produkte werden ausgegraut)</h4>
               <div className="flex flex-wrap gap-1.5">
                 {['A1', 'A2', 'A3', 'C', 'G', 'H', 'H1', 'H2', 'K', 'F', 'E', 'J', 'M'].map(code => {
                   const aktiv = gesperrteAllergene.has(code)
@@ -1204,8 +1185,8 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
 
             {positionen.length === 0 ? (
               <div className="text-center py-8">
-                <ShoppingCart size={36} className="mx-auto mb-3 text-ute-taupe" />
-                <p className="text-ute-taupe">Füge Produkte hinzu, um einen Allergen-Check durchzuführen.</p>
+                <span className="text-4xl mb-3 block">🛒</span>
+                <p className="text-baeckerei-text-secondary">Füge Produkte hinzu, um einen Allergen-Check durchzuführen.</p>
               </div>
             ) : (
               <>
@@ -1259,7 +1240,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
                 })()}
 
                 {/* Aufschlüsselung pro Produkt */}
-                <h4 className="text-sm font-semibold text-ute-charcoal mb-3 pt-3 border-t border-stone-100">
+                <h4 className="text-sm font-semibold text-baeckerei-text mb-3 pt-3 border-t border-stone-100">
                   Aufschlüsselung pro Produkt
                 </h4>
                 <div className="flex flex-col gap-2">
@@ -1268,7 +1249,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
                     return (
                       <div key={idx} className="bg-stone-50 rounded-xl p-3">
                         <div className="flex items-center justify-between mb-1.5">
-                          <span className="font-medium text-ute-charcoal text-sm">{pos.menge}× {pos.produkt_name}</span>
+                          <span className="font-medium text-baeckerei-text text-sm">{pos.menge}× {pos.produkt_name}</span>
                           {prod && (
                             <button onClick={() => { setAllergenCheck(false); setAllergenInfo(prod) }}
                               className="text-xs text-blue-600 hover:text-blue-800 underline">Details</button>
@@ -1297,7 +1278,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
                 {/* Hinweis */}
                 <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-xl">
                   <p className="text-xs text-blue-700">
-                    Diese Angaben dienen der Kundenberatung. Bei schweren Allergien bitte immer die vollständige Zutatenliste prüfen und Rücksprache mit der Backstube halten.
+                    ℹ️ Diese Angaben dienen der Kundenberatung. Bei schweren Allergien bitte immer die vollständige Zutatenliste prüfen und Rücksprache mit der Backstube halten.
                   </p>
                 </div>
               </>
@@ -1311,10 +1292,10 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setAllergenWarnung(null)}>
           <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
             <div className="text-center mb-4">
-              <AlertTriangle size={48} className="mx-auto mb-3 text-red-500" />
+              <span className="text-5xl block mb-3">⚠️</span>
               <h3 className="text-lg font-bold text-red-700">Allergen-Warnung!</h3>
             </div>
-            <p className="text-sm text-ute-charcoal text-center mb-3">
+            <p className="text-sm text-baeckerei-text text-center mb-3">
               <strong>{allergenWarnung.produkt.name || allergenWarnung.produkt.produkt_name}</strong> enthält:
             </p>
             <div className="flex flex-wrap gap-1.5 justify-center mb-4">
@@ -1324,12 +1305,12 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
                 </span>
               ))}
             </div>
-            <p className="text-xs text-ute-taupe text-center mb-5">
+            <p className="text-xs text-baeckerei-text-secondary text-center mb-5">
               Der Kunde hat angegeben, diese Allergene zu meiden.
             </p>
             <div className="flex gap-3">
               <button onClick={() => setAllergenWarnung(null)}
-                className="flex-1 py-3 rounded-xl bg-stone-100 hover:bg-stone-200 text-ute-charcoal font-medium text-sm">
+                className="flex-1 py-3 rounded-xl bg-stone-100 hover:bg-stone-200 text-baeckerei-text font-medium text-sm">
                 Abbrechen
               </button>
               <button onClick={() => {
@@ -1349,28 +1330,28 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setErkannterStammkunde(null)}>
           <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
             <div className="text-center mb-4">
-              <User size={48} className="mx-auto mb-3 text-ute-terracotta" />
-              <h3 className="text-lg font-bold text-ute-charcoal">Stammkunde erkannt!</h3>
-              <p className="text-ute-terracotta font-semibold text-xl mt-1">{erkannterStammkunde.name}</p>
+              <span className="text-5xl block mb-3">👋</span>
+              <h3 className="text-lg font-bold text-baeckerei-text">Stammkunde erkannt!</h3>
+              <p className="text-baeckerei-accent font-semibold text-xl mt-1">{erkannterStammkunde.name}</p>
             </div>
-            <p className="text-sm text-ute-taupe text-center mb-3">
+            <p className="text-sm text-baeckerei-text-secondary text-center mb-3">
               Letzte Bestellung laden?
             </p>
             <div className="bg-stone-50 rounded-xl p-3 mb-4">
               {erkannterStammkunde.letzte.map((p, i) => (
                 <div key={i} className="flex justify-between text-sm py-1">
                   <span>{p.menge}× {p.name}</span>
-                  <span className="text-ute-taupe">{formatPreis(p.preis * p.menge)}</span>
+                  <span className="text-baeckerei-text-secondary">{formatPreis(p.preis * p.menge)}</span>
                 </div>
               ))}
             </div>
             <div className="flex gap-3">
               <button onClick={() => setErkannterStammkunde(null)}
-                className="flex-1 py-3 rounded-xl bg-stone-100 hover:bg-stone-200 text-ute-charcoal font-medium text-sm">
+                className="flex-1 py-3 rounded-xl bg-stone-100 hover:bg-stone-200 text-baeckerei-text font-medium text-sm">
                 Nein danke
               </button>
               <button onClick={() => { ladeStammkunde(erkannterStammkunde); setErkannterStammkunde(null) }}
-                className="flex-1 py-3 rounded-xl bg-ute-terracotta hover:bg-ute-terracotta-light text-white font-medium text-sm">
+                className="flex-1 py-3 rounded-xl bg-baeckerei-accent hover:bg-baeckerei-accent-hover text-white font-medium text-sm">
                 Ja, laden!
               </button>
             </div>
@@ -1382,8 +1363,8 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
       {besonderheitenPopup && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setBesonderheitenPopup(false)}>
           <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
-            <h3 className="text-lg font-bold text-ute-charcoal mb-2 flex items-center gap-2"><Leaf size={20} className="text-ute-sage" /> Besonderheiten</h3>
-            <p className="text-sm text-ute-taupe mb-4">Nur Produkte mit diesen Eigenschaften anzeigen:</p>
+            <h3 className="text-lg font-bold text-baeckerei-text mb-2">🌿 Besonderheiten</h3>
+            <p className="text-sm text-baeckerei-text-secondary mb-4">Nur Produkte mit diesen Eigenschaften anzeigen:</p>
             <div className="flex flex-col gap-3">
               {[
                 { id: 'bio', label: 'Bio', icon: '🌱', farbe: 'green', desc: 'Aus biologischem Anbau' },
@@ -1403,12 +1384,12 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
                         : 'bg-stone-50 border-stone-200 hover:border-green-300'}`}>
                     <span className="text-2xl">{b.icon}</span>
                     <div className="flex-1">
-                      <p className={`font-semibold ${aktiv ? 'text-green-800' : 'text-ute-charcoal'}`}>{b.label}</p>
-                      <p className="text-xs text-ute-taupe">{b.desc}</p>
+                      <p className={`font-semibold ${aktiv ? 'text-green-800' : 'text-baeckerei-text'}`}>{b.label}</p>
+                      <p className="text-xs text-baeckerei-text-secondary">{b.desc}</p>
                     </div>
                     <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center
-                      ${aktiv ? 'bg-ute-sage border-ute-sage text-white' : 'border-stone-300'}`}>
-                      {aktiv && <Check size={14} />}
+                      ${aktiv ? 'bg-green-500 border-green-500 text-white' : 'border-stone-300'}`}>
+                      {aktiv && '✓'}
                     </div>
                   </button>
                 )
@@ -1416,7 +1397,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
             </div>
             <div className="flex gap-3 mt-5">
               <button onClick={() => { setAktiveBesonderheiten(new Set()); setBesonderheitenPopup(false) }}
-                className="flex-1 py-3 rounded-xl bg-stone-100 hover:bg-stone-200 text-ute-charcoal font-medium text-sm">
+                className="flex-1 py-3 rounded-xl bg-stone-100 hover:bg-stone-200 text-baeckerei-text font-medium text-sm">
                 Filter aufheben
               </button>
               <button onClick={() => setBesonderheitenPopup(false)}
