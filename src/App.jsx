@@ -1,64 +1,69 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { APP_NAME } from './config'
-import FilialAuswahl from './components/FilialAuswahl'
-import FilialApp from './components/FilialApp'
-import Dashboard from './components/Dashboard'
+import { APP_NAME, APP_SUBTITLE } from './config'
 import KassenApp from './components/KassenApp'
 
-function App() {
-  const [filiale, setFiliale] = useState(null)
+// Demo-Mitarbeiter für den Hackathon
+const MITARBEITER = [
+  { id: 'm1', name: 'Stefanie', rolle: 'Verkauf' },
+  { id: 'm2', name: 'Viktoria', rolle: 'Verkauf' },
+  { id: 'm3', name: 'Rebecca', rolle: 'Verkauf' },
+  { id: 'm4', name: 'Svenja', rolle: 'Verkauf' },
+]
 
-  // Filiale aus localStorage laden (bleibt nach Neustart)
+function App() {
+  const [mitarbeiter, setMitarbeiter] = useState(null)
+
+  // Mitarbeiter aus sessionStorage laden (bleibt in Tab-Session)
   useEffect(() => {
-    const gespeichert = localStorage.getItem('ausgewaehlte_filiale')
+    const gespeichert = sessionStorage.getItem('ute_mitarbeiter')
     if (gespeichert) {
-      setFiliale(JSON.parse(gespeichert))
+      setMitarbeiter(JSON.parse(gespeichert))
     }
   }, [])
 
-  const handleFilialAuswahl = (f) => {
-    setFiliale(f)
-    localStorage.setItem('ausgewaehlte_filiale', JSON.stringify(f))
+  const handleAuswahl = (ma) => {
+    setMitarbeiter(ma)
+    sessionStorage.setItem('ute_mitarbeiter', JSON.stringify(ma))
   }
 
-  const handleFilialWechsel = () => {
-    setFiliale(null)
-    localStorage.removeItem('ausgewaehlte_filiale')
+  const handleAbmelden = () => {
+    setMitarbeiter(null)
+    sessionStorage.removeItem('ute_mitarbeiter')
   }
 
-  return (
-    <div className="min-h-screen bg-baeckerei-bg">
-      <Routes>
-        {/* Filialauswahl – Startscreen */}
-        <Route path="/" element={
-          filiale
-            ? <Navigate to="/filiale" replace />
-            : <FilialAuswahl onSelect={handleFilialAuswahl} />
-        } />
+  // === STARTBILDSCHIRM: Mitarbeiter-Auswahl ===
+  if (!mitarbeiter) {
+    return (
+      <div className="min-h-screen bg-baeckerei-bg flex flex-col items-center justify-center p-6">
+        <div className="text-center mb-10">
+          <span className="text-5xl mb-4 block">🥐</span>
+          <h1 className="text-4xl font-bold text-baeckerei-text">{APP_NAME}</h1>
+          <p className="text-baeckerei-text-secondary mt-2 text-lg">{APP_SUBTITLE}</p>
+        </div>
 
-        {/* Filial-App – Hauptscreen für Filialmitarbeiterinnen */}
-        <Route path="/filiale" element={
-          filiale
-            ? <FilialApp filiale={filiale} onWechsel={handleFilialWechsel} />
-            : <Navigate to="/" replace />
-        } />
+        <p className="text-baeckerei-text-secondary mb-6 text-sm">Wer arbeitet heute an der Theke?</p>
 
-        {/* Zentral-Dashboard – Für die Backstube */}
-        <Route path="/dashboard" element={
-          <Dashboard />
-        } />
+        <div className="grid grid-cols-2 gap-4 w-full max-w-sm">
+          {MITARBEITER.map(ma => (
+            <button
+              key={ma.id}
+              onClick={() => handleAuswahl(ma)}
+              className="bg-white rounded-2xl shadow-sm border-2 border-stone-100 p-6 text-center
+                         hover:shadow-md hover:border-baeckerei-accent active:bg-amber-50
+                         transition-all flex flex-col items-center gap-2"
+            >
+              <span className="text-3xl">👤</span>
+              <span className="font-semibold text-baeckerei-text text-lg">{ma.name}</span>
+              <span className="text-xs text-baeckerei-text-secondary">{ma.rolle}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    )
+  }
 
-        {/* Kassensystem – Sprach-basiertes POS */}
-        <Route path="/kasse" element={
-          <KassenApp />
-        } />
-
-        {/* Fallback */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </div>
-  )
+  // === KASSENSYSTEM ===
+  return <KassenApp mitarbeiter={mitarbeiter} onAbmelden={handleAbmelden} />
 }
 
 export default App
