@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { APP_NAME, APP_SUBTITLE } from './config'
 import KassenApp from './components/KassenApp'
+import { UTELogoLarge } from './components/ute-logo'
 
 // Demo-Mitarbeiter für den Hackathon
 const MITARBEITER = [
@@ -36,9 +37,7 @@ function App() {
     return (
       <div className="min-h-screen bg-baeckerei-bg flex flex-col items-center justify-center p-6">
         <div className="text-center mb-10">
-          <span className="text-5xl mb-4 block">🥐</span>
-          <h1 className="text-4xl font-bold text-baeckerei-text">{APP_NAME}</h1>
-          <p className="text-baeckerei-text-secondary mt-2 text-lg">{APP_SUBTITLE}</p>
+          <UTELogoLarge />
         </div>
 
         <p className="text-baeckerei-text-secondary mb-6 text-sm">Wer arbeitet heute an der Theke?</p>
@@ -52,7 +51,7 @@ function App() {
                          hover:shadow-md hover:border-baeckerei-accent active:bg-amber-50
                          transition-all flex flex-col items-center gap-2"
             >
-              <span className="text-3xl">👤</span>
+              <div className="w-12 h-12 rounded-full bg-baeckerei-accent/20 flex items-center justify-center text-baeckerei-accent font-bold text-lg">{ma.name.charAt(0)}</div>
               <span className="font-semibold text-baeckerei-text text-lg">{ma.name}</span>
               <span className="text-xs text-baeckerei-text-secondary">{ma.rolle}</span>
             </button>
