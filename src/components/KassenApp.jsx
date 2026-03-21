@@ -41,6 +41,8 @@ const CROSS_SELLING_REGELN = [
   { trigger_produkt: 'roeggelchen', vorschlag: 'nussecke', text: 'Da passt etwas Süßes noch gut dazu!', prio: 1 },
   { trigger_produkt: 'nussschnecke', vorschlag: 'nussecke', text: 'Nuss und Nuss gesellt sich gern!', prio: 1 },
   { trigger_produkt: 'cappuccino', vorschlag: 'butterhoernchen', text: 'Nur mit Kaffee wird der Tag aber zu lang!', prio: 2 },
+  { trigger_produkt: 'mischbrot', vorschlag: 'leinsaatbrot', text: 'Ein Körnerbrot wäre eine gute Ergänzung!', prio: 2 },
+  { trigger_produkt: 'laugenbrezel', vorschlag: 'vollkornbroetchen', text: 'Ein paar zusätzliche Ballaststoffe passen ganz gut!', prio: 3 },
 ]
 
 // ============================================================
@@ -297,6 +299,12 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
   const [besonderheitenPopup, setBesonderheitenPopup] = useState(false)
   const [aktiveBesonderheiten, setAktiveBesonderheiten] = useState(new Set()) // 'bio', 'vegan', 'regional'
 
+  // Stammkunden-Verwaltung (dynamisch erweiterbar)
+  const [stammkundenListe, setStammkundenListe] = useState(STAMMKUNDEN)
+  const [neuerStammkundePopup, setNeuerStammkundePopup] = useState(false)
+  const [neuerStammkundeName, setNeuerStammkundeName] = useState('')
+  const [neuerStammkundeAllergie, setNeuerStammkundeAllergie] = useState('')
+
   // Katalog laden (alle Produkte inkl. Getränke kommen jetzt aus dem Katalog)
   useEffect(() => {
     ladeKatalog().then(data => {
@@ -357,7 +365,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
   // ── STAMMKUNDEN-ERKENNUNG per Sprache ──
   useEffect(() => {
     if (!sprachModus || !liveText || stammkundeErkanntRef.current) return
-    const kunde = erkenneStammkunde(liveText, STAMMKUNDEN)
+    const kunde = erkenneStammkunde(liveText, stammkundenListe)
     if (kunde) {
       stammkundeErkanntRef.current = true
       setErkannterStammkunde(kunde)
@@ -481,6 +489,27 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
         })
       }
     }
+  }
+
+  // ── NEUEN STAMMKUNDEN ANLEGEN ──
+  function stammkundeAnlegen() {
+    if (!neuerStammkundeName.trim()) return
+    const neuerKunde = {
+      id: 'sk' + Date.now(),
+      name: neuerStammkundeName.trim(),
+      spitzname: neuerStammkundeName.trim(),
+      allergie: neuerStammkundeAllergie.trim() || undefined,
+      letzte: positionen.map(p => ({
+        produkt_id: p.produkt_id,
+        name: p.produkt_name,
+        menge: p.menge,
+        preis: p.preis_pro_stueck,
+      })),
+    }
+    setStammkundenListe(prev => [...prev, neuerKunde])
+    setNeuerStammkundePopup(false)
+    setNeuerStammkundeName('')
+    setNeuerStammkundeAllergie('')
   }
 
   // ── SPRACHERKENNUNG ──
@@ -984,11 +1013,11 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
       {/* ═══ STAMMKUNDE POPUP ═══ */}
       {stammkundePopup && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setStammkundePopup(false)}>
-          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <h3 className="text-lg font-bold text-baeckerei-text mb-4">👤 Stammkunde auswählen</h3>
             <p className="text-sm text-baeckerei-text-secondary mb-4">Letzte Bestellung wird automatisch geladen</p>
             <div className="flex flex-col gap-3">
-              {STAMMKUNDEN.map(kunde => (
+              {stammkundenListe.map(kunde => (
                 <button key={kunde.id} onClick={() => ladeStammkunde(kunde)}
                   className="bg-stone-50 hover:bg-amber-50 border border-stone-200 hover:border-baeckerei-accent rounded-xl p-4 text-left transition-colors">
                   <p className="font-semibold text-baeckerei-text">{kunde.name}</p>
@@ -1001,10 +1030,54 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
                 </button>
               ))}
             </div>
+            {/* Neu anlegen Button */}
+            <button onClick={() => { setStammkundePopup(false); setNeuerStammkundePopup(true) }}
+              className="w-full mt-3 py-3 bg-baeckerei-accent/10 hover:bg-baeckerei-accent/20 text-baeckerei-accent font-semibold rounded-xl border-2 border-dashed border-baeckerei-accent/40 transition-colors">
+              + Neuen Stammkunden anlegen
+            </button>
             <button onClick={() => setStammkundePopup(false)}
-              className="w-full mt-4 py-2 text-baeckerei-text-secondary text-sm hover:text-baeckerei-text">
+              className="w-full mt-2 py-2 text-baeckerei-text-secondary text-sm hover:text-baeckerei-text">
               Abbrechen
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ NEUER STAMMKUNDE POPUP ═══ */}
+      {neuerStammkundePopup && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setNeuerStammkundePopup(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-bold text-baeckerei-text mb-4">👤 Neuen Stammkunden anlegen</h3>
+            {positionen.length > 0 ? (
+              <p className="text-sm text-green-600 mb-4">✓ Aktuelle Bestellung ({positionen.length} Positionen) wird als "wie immer" gespeichert</p>
+            ) : (
+              <p className="text-sm text-orange-500 mb-4">⚠ Noch keine Produkte in der Bestellung — erst bestellen, dann Stammkunde anlegen!</p>
+            )}
+            <div className="flex flex-col gap-3">
+              <div>
+                <label className="text-sm font-medium text-baeckerei-text">Name *</label>
+                <input type="text" value={neuerStammkundeName} onChange={e => setNeuerStammkundeName(e.target.value)}
+                  placeholder="z.B. Frau Müller"
+                  className="w-full mt-1 px-3 py-2 rounded-lg border border-stone-300 focus:border-baeckerei-accent focus:outline-none text-sm" />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-baeckerei-text">Allergie (optional)</label>
+                <input type="text" value={neuerStammkundeAllergie} onChange={e => setNeuerStammkundeAllergie(e.target.value)}
+                  placeholder="z.B. Sesam, Nüsse"
+                  className="w-full mt-1 px-3 py-2 rounded-lg border border-stone-300 focus:border-baeckerei-accent focus:outline-none text-sm" />
+              </div>
+            </div>
+            <div className="flex gap-2 mt-4">
+              <button onClick={() => setNeuerStammkundePopup(false)}
+                className="flex-1 py-2 text-baeckerei-text-secondary text-sm border border-stone-200 rounded-lg hover:bg-stone-50">
+                Abbrechen
+              </button>
+              <button onClick={stammkundeAnlegen}
+                disabled={!neuerStammkundeName.trim() || positionen.length === 0}
+                className="flex-1 py-2 bg-baeckerei-accent text-white font-semibold rounded-lg hover:bg-amber-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                Speichern
+              </button>
+            </div>
           </div>
         </div>
       )}
