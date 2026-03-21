@@ -104,56 +104,124 @@ function hatGesperrtesAllergen(produkt, gesperrteAllergene) {
 // ZAHLWÖRTER → Ziffern (für Live-Erkennung)
 // ============================================================
 const ZAHLWOERTER = {
-  'ein': 1, 'eine': 1, 'einen': 1, 'eins': 1,
-  'zwei': 2, 'zwo': 2,
+  'ein': 1, 'eine': 1, 'einen': 1, 'eins': 1, 'einem': 1,
+  'zwei': 2, 'zwo': 2, 'paar': 2,
   'drei': 3, 'vier': 4, 'fünf': 5, 'sechs': 6,
   'sieben': 7, 'acht': 8, 'neun': 9, 'zehn': 10,
-  'elf': 11, 'zwölf': 12, 'fünfzehn': 15, 'zwanzig': 20,
+  'elf': 11, 'zwölf': 12, 'dreizehn': 13, 'vierzehn': 14,
+  'fünfzehn': 15, 'zwanzig': 20, 'halbes': 0.5, 'halbe': 0.5,
+}
+
+/**
+ * Normalisiert deutschen Text für besseres Matching:
+ * - Umlaute auflösen (ö→oe etc.) für Vergleich
+ * - Plural-Endungen entfernen
+ */
+function normalisiereText(text) {
+  return text
+    .toLowerCase()
+    .replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
+}
+
+/**
+ * Erzeugt Suchvarianten für ein Wort (Plural, Singular, mit/ohne Umlaut-Auflösung)
+ */
+function suchVarianten(name) {
+  const lower = name.toLowerCase()
+  const varianten = new Set([lower])
+  // Plural-Varianten
+  if (lower.endsWith('en')) varianten.add(lower.slice(0, -2)) // Brötchen → Brötch (naja)
+  if (lower.endsWith('n')) varianten.add(lower.slice(0, -1))  // Semmeln → Semmel
+  if (lower.endsWith('e')) varianten.add(lower + 'n')          // Brezel → Brezeln
+  if (!lower.endsWith('n') && !lower.endsWith('s')) {
+    varianten.add(lower + 'n')  // Croissant → Croissantn (harmlos)
+    varianten.add(lower + 's')  // Croissant → Croissants
+  }
+  // Umlaut-aufgelöste Version
+  varianten.add(normalisiereText(lower))
+  return [...varianten].filter(v => v.length >= 3)
+}
+
+/**
+ * Stammkunden-Erkennung im Sprachtext.
+ * Sucht nach Begrüßungen + Namen wie "Hallo Herr Mayer", "Guten Morgen Frau Schmidt"
+ */
+function erkenneStammkunde(text, stammkunden) {
+  if (!text || text.length < 5) return null
+  const lower = text.toLowerCase()
+  for (const kunde of stammkunden) {
+    // Name direkt suchen
+    if (lower.includes(kunde.name.toLowerCase())) return kunde
+    // Nachname extrahieren und suchen
+    const teile = kunde.name.split(/\s+/)
+    const nachname = teile[teile.length - 1].toLowerCase()
+    if (nachname.length >= 3 && lower.includes(nachname)) return kunde
+    // Spitzname suchen
+    if (kunde.spitzname && lower.includes(kunde.spitzname.toLowerCase())) return kunde
+  }
+  return null
 }
 
 /**
  * Live-Matching: Durchsucht den Text nach Produktnamen/Aliasen und Mengen.
+ * Mit Fuzzy-Matching: Plural/Singular, Umlaut-Varianten.
  * Gibt ein Array von { produkt, menge } zurück.
  */
 function liveMatchProdukte(text, produktListe) {
   if (!text || text.length < 3) return []
   const textLower = text.toLowerCase()
+  const textNorm = normalisiereText(text)
   const gefunden = []
   const bereitsGefunden = new Set()
 
   for (const produkt of produktListe) {
-    // Alle suchbaren Namen: Name + Aliase
-    const suchNamen = [produkt.name, ...(produkt.aliase || [])].map(n => n.toLowerCase())
+    if (bereitsGefunden.has(produkt.id)) continue
 
-    for (const suchName of suchNamen) {
-      if (suchName.length < 3) continue
-      const idx = textLower.indexOf(suchName)
-      if (idx === -1) continue
-      if (bereitsGefunden.has(produkt.id)) break
+    // Alle suchbaren Namen: Name + Aliase, jeweils mit Varianten
+    const alleNamen = [produkt.name, ...(produkt.aliase || [])]
+    let besteMatch = null
+    let besteIdx = -1
 
-      // Menge vor dem Produktnamen suchen
-      let menge = 1
-      const vorher = textLower.substring(Math.max(0, idx - 20), idx).trim()
-      const wörter = vorher.split(/\s+/)
-      const letztesWort = wörter[wörter.length - 1]
+    for (const originalName of alleNamen) {
+      const varianten = suchVarianten(originalName)
+      for (const variante of varianten) {
+        if (variante.length < 3) continue
+        // Suche in Original und normalisiertem Text
+        let idx = textLower.indexOf(variante)
+        if (idx === -1) idx = textNorm.indexOf(normalisiereText(variante))
+        if (idx === -1) continue
 
-      if (letztesWort) {
-        // Erst Zahlwort probieren
-        if (ZAHLWOERTER[letztesWort]) {
-          menge = ZAHLWOERTER[letztesWort]
-        } else {
-          // Dann Ziffer probieren
-          const zahl = parseInt(letztesWort)
-          if (!isNaN(zahl) && zahl > 0 && zahl <= 100) {
-            menge = zahl
-          }
+        // Längere Matches bevorzugen (spezifischer)
+        if (!besteMatch || variante.length > besteMatch.length) {
+          besteMatch = variante
+          besteIdx = idx
         }
       }
-
-      gefunden.push({ produkt, menge })
-      bereitsGefunden.add(produkt.id)
-      break // Nächstes Produkt
     }
+
+    if (!besteMatch) continue
+
+    // Menge vor dem Produktnamen suchen (erweiterte Suche)
+    let menge = 1
+    const vorher = textLower.substring(Math.max(0, besteIdx - 25), besteIdx).trim()
+    const wörter = vorher.split(/\s+/)
+
+    // Von hinten nach vorne nach Zahl suchen
+    for (let w = wörter.length - 1; w >= Math.max(0, wörter.length - 3); w--) {
+      const wort = wörter[w]
+      if (ZAHLWOERTER[wort]) {
+        menge = ZAHLWOERTER[wort]
+        break
+      }
+      const zahl = parseInt(wort)
+      if (!isNaN(zahl) && zahl > 0 && zahl <= 100) {
+        menge = zahl
+        break
+      }
+    }
+
+    gefunden.push({ produkt, menge })
+    bereitsGefunden.add(produkt.id)
   }
   return gefunden
 }
@@ -212,6 +280,10 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
   const [allergenLegende, setAllergenLegende] = useState({})
   const [gesperrteAllergene, setGesperrteAllergene] = useState(new Set()) // per Sprache erkannte Ausschlüsse
   const [allergenWarnung, setAllergenWarnung] = useState(null) // {produkt, allergene} für Warnungs-Popup
+
+  // Stammkunden-Erkennung per Sprache
+  const [erkannterStammkunde, setErkannterStammkunde] = useState(null) // per Sprache erkannter Stammkunde
+  const stammkundeErkanntRef = useRef(false) // verhindert mehrfaches Popup
 
   // Katalog laden
   useEffect(() => {
@@ -272,6 +344,16 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
       })
     }
   }, [liveText])
+
+  // ── STAMMKUNDEN-ERKENNUNG per Sprache ──
+  useEffect(() => {
+    if (!sprachModus || !liveText || stammkundeErkanntRef.current) return
+    const kunde = erkenneStammkunde(liveText, STAMMKUNDEN)
+    if (kunde) {
+      stammkundeErkanntRef.current = true
+      setErkannterStammkunde(kunde)
+    }
+  }, [liveText, sprachModus])
 
   // ── PRODUKT MANUELL HINZUFÜGEN (mit Allergen-Warnung) ──
   function produktHinzufuegen(produkt) {
@@ -421,13 +503,14 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
     if (!mediaRecorderRef.current) return
     stoppeSpeechRecognition()
     setSprachModus(false)
-    setVerarbeitung(true)
 
-    // Live-Positionen sofort als echte Positionen übernehmen (Vorschau → fest)
+    // SOFORT: Live-Positionen als echte Positionen übernehmen (kein Warten!)
+    const übernahmeIds = new Set()
     if (livePositionen.length > 0) {
       setPositionen(prev => {
         const neu = [...prev]
         livePositionen.forEach(lp => {
+          übernahmeIds.add(lp.produkt_id)
           const existing = neu.findIndex(p => p.produkt_id === lp.produkt_id)
           if (existing >= 0) {
             neu[existing] = { ...neu[existing], menge: lp.menge, preis_gesamt: lp.preis_gesamt }
@@ -440,13 +523,18 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
       setLivePositionen([])
     }
 
+    // HINTERGRUND: Voxtral + Mistral als Korrektur-Pass
+    setVerarbeitung(true)
     mediaRecorderRef.current.stop()
     streamRef.current?.getTracks().forEach(t => t.stop())
     await new Promise(r => setTimeout(r, 300))
 
     try {
       const chunks = audioChunksRef.current
-      if (chunks.length === 0) throw new Error('Keine Audio-Daten')
+      if (chunks.length === 0) {
+        setVerarbeitung(false)
+        return
+      }
       const mimeType = chunks[0].type || 'audio/webm'
       const audioBlob = new Blob(chunks, { type: mimeType })
       const audioBase64 = await blobToBase64(audioBlob)
@@ -458,28 +546,24 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
       // Schritt 2: Erkennung (Mistral Large – Smarttalk raus, Positionen extrahieren)
       const erkennungsErgebnis = await erkenneSprache(text)
       if (erkennungsErgebnis.success && erkennungsErgebnis.positionen?.length > 0) {
-        // Finale Positionen ersetzen die vorläufigen komplett
+        // Korrektur-Pass: Mistral-Ergebnis überschreibt nur wenn es besser/anders ist
         setPositionen(prev => {
-          // Behalte manuell hinzugefügte Positionen (die vor der Aufnahme da waren)
-          const manuell = prev.filter(p => !livePositionen.some(lp => lp.produkt_id === p.produkt_id) || p.istLive === undefined)
-          // Aber entferne die, die aus der Live-Erkennung kamen
-          const vorherigeManuell = prev.filter(p => {
-            // Position war schon vor Aufnahme da (nicht aus dieser Live-Session)
-            return !livePositionen.some(lp => lp.produkt_id === p.produkt_id)
-          })
-
-          const neu = [...vorherigeManuell]
+          const neu = [...prev]
           erkennungsErgebnis.positionen.forEach(ep => {
             const existing = neu.findIndex(p => p.produkt_id === ep.produkt_id)
             if (existing >= 0) {
-              neu[existing] = {
-                ...neu[existing],
-                menge: neu[existing].menge + ep.menge,
-                preis_gesamt: ep.preis_pro_stueck != null
-                  ? Math.round((neu[existing].menge + ep.menge) * ep.preis_pro_stueck * 100) / 100
-                  : null
+              // Nur Menge korrigieren wenn Mistral eine andere Menge erkannt hat
+              if (ep.menge !== neu[existing].menge) {
+                neu[existing] = {
+                  ...neu[existing],
+                  menge: ep.menge,
+                  preis_gesamt: ep.preis_pro_stueck != null
+                    ? Math.round(ep.menge * ep.preis_pro_stueck * 100) / 100
+                    : null
+                }
               }
             } else {
+              // Neues Produkt das Live nicht erkannt hat → hinzufügen
               neu.push(ep)
             }
           })
@@ -487,7 +571,10 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
         })
       }
     } catch (err) {
-      setFehler('Spracherkennung fehlgeschlagen: ' + err.message)
+      // Kein Fehler anzeigen wenn Live-Erkennung schon was hat
+      if (übernahmeIds.size === 0) {
+        setFehler('Spracherkennung fehlgeschlagen: ' + err.message)
+      }
     }
     setVerarbeitung(false)
   }
@@ -510,6 +597,8 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
     setLiveText('')
     setGesperrteAllergene(new Set())
     setAllergenWarnung(null)
+    setErkannterStammkunde(null)
+    stammkundeErkanntRef.current = false
   }
 
   // ── BERECHNUNGEN ──
@@ -1089,6 +1178,40 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
               }}
                 className="flex-1 py-3 rounded-xl bg-red-500 hover:bg-red-600 text-white font-medium text-sm">
                 Trotzdem hinzufügen
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ STAMMKUNDE ERKANNT POPUP (per Sprache) ═══ */}
+      {erkannterStammkunde && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setErkannterStammkunde(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
+            <div className="text-center mb-4">
+              <span className="text-5xl block mb-3">👋</span>
+              <h3 className="text-lg font-bold text-baeckerei-text">Stammkunde erkannt!</h3>
+              <p className="text-baeckerei-accent font-semibold text-xl mt-1">{erkannterStammkunde.name}</p>
+            </div>
+            <p className="text-sm text-baeckerei-text-secondary text-center mb-3">
+              Letzte Bestellung laden?
+            </p>
+            <div className="bg-stone-50 rounded-xl p-3 mb-4">
+              {erkannterStammkunde.letzte.map((p, i) => (
+                <div key={i} className="flex justify-between text-sm py-1">
+                  <span>{p.menge}× {p.name}</span>
+                  <span className="text-baeckerei-text-secondary">{formatPreis(p.preis * p.menge)}</span>
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => setErkannterStammkunde(null)}
+                className="flex-1 py-3 rounded-xl bg-stone-100 hover:bg-stone-200 text-baeckerei-text font-medium text-sm">
+                Nein danke
+              </button>
+              <button onClick={() => { ladeStammkunde(erkannterStammkunde); setErkannterStammkunde(null) }}
+                className="flex-1 py-3 rounded-xl bg-baeckerei-accent hover:bg-baeckerei-accent-hover text-white font-medium text-sm">
+                Ja, laden!
               </button>
             </div>
           </div>
