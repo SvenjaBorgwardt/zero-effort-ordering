@@ -185,18 +185,6 @@
       "regional": true
     },
     {
-      "id": "apfeltasche",
-      "name": "Apfeltasche",
-      "aliase": ["Apfeltasche", "Apfeltaschen", "AT"],
-      "einheit": "Stück",
-      "typ": "teigling",
-      "preis": 1.70,
-      "kategorie": "Feingebäck",
-      "allergene": ["A1", "C", "G"],
-      "zutaten": ["Weizenmehl", "Butter", "Eier", "Äpfel", "Zucker", "Zimt", "Zitronensaft"],
-      "kann_enthalten": ["H", "F"]
-    },
-    {
       "id": "berliner",
       "name": "Berliner (Marmelade)",
       "aliase": ["Berliner", "Krapfen", "Pfannkuchen", "Kreppel"],
@@ -420,31 +408,6 @@
       "kategorie": "Belegware",
       "allergene": ["G"],
       "zutaten": ["Milch", "Salz", "Lab", "Milchsäurekulturen"],
-      "kann_enthalten": []
-    },
-    {
-      "id": "kaffee",
-      "name": "Kaffee",
-      "aliase": ["Kaffee", "Tasse", "Käffchen"],
-      "einheit": "Stück",
-      "typ": "fertig",
-      "preis": 2.50,
-      "kategorie": "Heißgetränke",
-      "allergene": [],
-      "zutaten": ["Kaffee"],
-      "kann_enthalten": [],
-      "vegan": true
-    },
-    {
-      "id": "cappuccino",
-      "name": "Cappuccino",
-      "aliase": ["Cappuccino", "Cappu", "Cappucino"],
-      "einheit": "Stück",
-      "typ": "fertig",
-      "preis": 4.00,
-      "kategorie": "Heißgetränke",
-      "allergene": ["G"],
-      "zutaten": ["Kaffee", "Milch"],
       "kann_enthalten": []
     },
     {
