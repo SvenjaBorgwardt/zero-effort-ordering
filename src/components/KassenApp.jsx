@@ -33,7 +33,25 @@ const STAMMKUNDEN = [
 ]
 
 // Kaffee-Produkt (für Cross-Selling, noch nicht im Katalog)
-const KAFFEE = { id: 'kaffee', name: 'Kaffee', preis: 1.80, einheit: 'Stück', kategorie: 'Getränke' }
+const KAFFEE = { id: 'kaffee', name: 'Kaffee', preis: 1.80, einheit: 'Stück', kategorie: 'Getränke', allergene: ['G'], zutaten: ['Kaffee', 'Milch (optional)'], kann_enthalten: [] }
+
+// ============================================================
+// ALLERGEN-ICONS & FARBEN
+// ============================================================
+const ALLERGEN_ICONS = {
+  'A': '🌾', 'A1': '🌾', 'A2': '🌾', 'A3': '🌾',
+  'B': '🦐', 'C': '🥚', 'D': '🐟', 'E': '🥜',
+  'F': '🫘', 'G': '🥛', 'H': '🌰', 'H1': '🌰', 'H2': '🌰', 'H3': '🌰',
+  'I': '🥬', 'J': '🟡', 'K': '⚪', 'L': '🍷', 'M': '🌱', 'N': '🐚',
+}
+
+// Kurznamen für Allergen-Tags
+const ALLERGEN_KURZ = {
+  'A': 'Gluten', 'A1': 'Weizen', 'A2': 'Roggen', 'A3': 'Dinkel',
+  'B': 'Krebstiere', 'C': 'Ei', 'D': 'Fisch', 'E': 'Erdnuss',
+  'F': 'Soja', 'G': 'Milch', 'H': 'Nüsse', 'H1': 'Mandel', 'H2': 'Haselnuss', 'H3': 'Walnuss',
+  'I': 'Sellerie', 'J': 'Senf', 'K': 'Sesam', 'L': 'Sulfite', 'M': 'Lupine', 'N': 'Weichtiere',
+}
 
 // ============================================================
 // ZAHLWÖRTER → Ziffern (für Live-Erkennung)
@@ -141,6 +159,11 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
   const [stammkundePopup, setStammkundePopup] = useState(false)
   const [crossSelling, setCrossSelling] = useState(null) // null oder Produkt-Vorschlag
 
+  // Allergen-Feature
+  const [allergenInfo, setAllergenInfo] = useState(null) // null oder {produkt, ...}
+  const [allergenCheck, setAllergenCheck] = useState(false) // Gesamt-Allergen-Check
+  const [allergenLegende, setAllergenLegende] = useState({})
+
   // Katalog laden
   useEffect(() => {
     ladeKatalog().then(data => {
@@ -150,6 +173,8 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
         produkt_name: p.name,
       }))
       setProdukte([...backwaren, KAFFEE])
+      // Allergen-Legende laden
+      if (data.allergene_legende) setAllergenLegende(data.allergene_legende)
     }).catch(() => {
       // Fallback: leerer Katalog
       setProdukte([KAFFEE])
@@ -474,6 +499,11 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          {/* Allergen-Check Button */}
+          <button onClick={() => setAllergenCheck(true)}
+            className="px-3 py-2 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm font-medium hover:bg-red-100">
+            ⚠️ Allergene
+          </button>
           {/* Stammkunde-Button */}
           <button onClick={() => setStammkundePopup(true)}
             className="px-3 py-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-sm font-medium hover:bg-amber-100">
@@ -517,17 +547,35 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
           <div className="flex-1 overflow-y-auto p-2">
             <div className="grid grid-cols-3 gap-2">
               {gefilterteProdukte.map(produkt => (
-                <button key={produkt.id} onClick={() => produktHinzufuegen(produkt)}
-                  className="bg-white rounded-xl border-2 border-stone-100 p-3 text-left
-                             hover:border-baeckerei-accent hover:shadow-sm active:bg-amber-50
-                             transition-all flex flex-col justify-between min-h-[80px]">
-                  <span className="font-medium text-baeckerei-text text-sm leading-tight">
-                    {produkt.name || produkt.produkt_name}
-                  </span>
-                  <span className="text-baeckerei-accent font-bold text-sm mt-1">
-                    {produkt.preis ? formatPreis(produkt.preis) : '—'}
-                  </span>
-                </button>
+                <div key={produkt.id} className="relative">
+                  <button onClick={() => produktHinzufuegen(produkt)}
+                    className="w-full bg-white rounded-xl border-2 border-stone-100 p-3 text-left
+                               hover:border-baeckerei-accent hover:shadow-sm active:bg-amber-50
+                               transition-all flex flex-col justify-between min-h-[80px]">
+                    <span className="font-medium text-baeckerei-text text-sm leading-tight pr-6">
+                      {produkt.name || produkt.produkt_name}
+                    </span>
+                    <div className="flex items-center gap-1 mt-1">
+                      <span className="text-baeckerei-accent font-bold text-sm">
+                        {produkt.preis ? formatPreis(produkt.preis) : '—'}
+                      </span>
+                      {produkt.allergene?.length > 0 && (
+                        <span className="text-xs text-stone-400 ml-auto">
+                          {produkt.allergene.slice(0, 3).map(a => ALLERGEN_ICONS[a] || '⚠️').join('')}
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                  {/* Allergen-Info Button */}
+                  {(produkt.allergene?.length > 0 || produkt.zutaten?.length > 0) && (
+                    <button onClick={(e) => { e.stopPropagation(); setAllergenInfo(produkt) }}
+                      className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-stone-100 hover:bg-red-100
+                                 text-stone-400 hover:text-red-600 text-xs flex items-center justify-center transition-colors"
+                      title="Allergene & Zutaten">
+                      ℹ️
+                    </button>
+                  )}
+                </div>
               ))}
             </div>
           </div>
@@ -698,6 +746,186 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
               className="w-full mt-4 py-2 text-baeckerei-text-secondary text-sm hover:text-baeckerei-text">
               Abbrechen
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ ALLERGEN-INFO POPUP (einzelnes Produkt) ═══ */}
+      {allergenInfo && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setAllergenInfo(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <h3 className="text-lg font-bold text-baeckerei-text">{allergenInfo.name || allergenInfo.produkt_name}</h3>
+                <p className="text-sm text-baeckerei-text-secondary">{allergenInfo.kategorie}</p>
+              </div>
+              <button onClick={() => setAllergenInfo(null)} className="text-stone-400 hover:text-stone-600 text-xl">✕</button>
+            </div>
+
+            {/* Allergene */}
+            {allergenInfo.allergene?.length > 0 && (
+              <div className="mb-4">
+                <h4 className="text-sm font-semibold text-red-700 mb-2">⚠️ Enthält (Allergene)</h4>
+                <div className="flex flex-wrap gap-1.5">
+                  {allergenInfo.allergene.map(a => (
+                    <span key={a} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs font-medium">
+                      {ALLERGEN_ICONS[a] || '⚠️'} {ALLERGEN_KURZ[a] || a}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Kann Spuren enthalten */}
+            {allergenInfo.kann_enthalten?.length > 0 && (
+              <div className="mb-4">
+                <h4 className="text-sm font-semibold text-amber-700 mb-2">⚡ Kann Spuren enthalten</h4>
+                <div className="flex flex-wrap gap-1.5">
+                  {allergenInfo.kann_enthalten.map(a => (
+                    <span key={a} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-200 text-amber-700 text-xs font-medium">
+                      {ALLERGEN_ICONS[a] || '⚠️'} {ALLERGEN_KURZ[a] || a}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Zutaten */}
+            {allergenInfo.zutaten?.length > 0 && (
+              <div className="mb-4">
+                <h4 className="text-sm font-semibold text-baeckerei-text mb-2">📋 Zutaten</h4>
+                <p className="text-sm text-baeckerei-text-secondary leading-relaxed">
+                  {allergenInfo.zutaten.join(', ')}
+                </p>
+              </div>
+            )}
+
+            {/* Allergen-Legende Link */}
+            {allergenInfo.allergene?.length > 0 && (
+              <div className="mt-4 pt-3 border-t border-stone-100">
+                <p className="text-xs text-baeckerei-text-secondary">
+                  {allergenInfo.allergene.map(a => `${a}: ${allergenLegende[a] || ALLERGEN_KURZ[a] || a}`).join(' · ')}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ═══ ALLERGEN-CHECK POPUP (gesamte Bestellung) ═══ */}
+      {allergenCheck && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setAllergenCheck(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <h3 className="text-lg font-bold text-baeckerei-text">⚠️ Allergen-Check</h3>
+                <p className="text-sm text-baeckerei-text-secondary">
+                  {positionen.length > 0 ? 'Allergene in der aktuellen Bestellung' : 'Keine Positionen in der Bestellung'}
+                </p>
+              </div>
+              <button onClick={() => setAllergenCheck(false)} className="text-stone-400 hover:text-stone-600 text-xl">✕</button>
+            </div>
+
+            {positionen.length === 0 ? (
+              <div className="text-center py-8">
+                <span className="text-4xl mb-3 block">🛒</span>
+                <p className="text-baeckerei-text-secondary">Füge Produkte hinzu, um einen Allergen-Check durchzuführen.</p>
+              </div>
+            ) : (
+              <>
+                {/* Zusammenfassung aller Allergene */}
+                {(() => {
+                  const alleAllergene = new Set()
+                  const alleKannEnthalten = new Set()
+                  positionen.forEach(pos => {
+                    const prod = produkte.find(p => p.id === pos.produkt_id)
+                    if (prod) {
+                      (prod.allergene || []).forEach(a => alleAllergene.add(a))
+                      ;(prod.kann_enthalten || []).forEach(a => alleKannEnthalten.add(a))
+                    }
+                  })
+                  // Kann-enthalten minus echte Allergene
+                  alleAllergene.forEach(a => alleKannEnthalten.delete(a))
+
+                  return (
+                    <div className="mb-5">
+                      <h4 className="text-sm font-semibold text-red-700 mb-2">
+                        Enthaltene Allergene ({alleAllergene.size})
+                      </h4>
+                      {alleAllergene.size > 0 ? (
+                        <div className="flex flex-wrap gap-1.5 mb-3">
+                          {[...alleAllergene].sort().map(a => (
+                            <span key={a} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs font-medium">
+                              {ALLERGEN_ICONS[a] || '⚠️'} {ALLERGEN_KURZ[a] || a}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-green-600 mb-3">Keine Allergendaten vorhanden.</p>
+                      )}
+
+                      {alleKannEnthalten.size > 0 && (
+                        <>
+                          <h4 className="text-sm font-semibold text-amber-700 mb-2">
+                            Kann Spuren enthalten ({alleKannEnthalten.size})
+                          </h4>
+                          <div className="flex flex-wrap gap-1.5">
+                            {[...alleKannEnthalten].sort().map(a => (
+                              <span key={a} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-700 text-xs font-medium">
+                                {ALLERGEN_ICONS[a] || '⚠️'} {ALLERGEN_KURZ[a] || a}
+                              </span>
+                            ))}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )
+                })()}
+
+                {/* Aufschlüsselung pro Produkt */}
+                <h4 className="text-sm font-semibold text-baeckerei-text mb-3 pt-3 border-t border-stone-100">
+                  Aufschlüsselung pro Produkt
+                </h4>
+                <div className="flex flex-col gap-2">
+                  {positionen.map((pos, idx) => {
+                    const prod = produkte.find(p => p.id === pos.produkt_id)
+                    return (
+                      <div key={idx} className="bg-stone-50 rounded-xl p-3">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="font-medium text-baeckerei-text text-sm">{pos.menge}× {pos.produkt_name}</span>
+                          {prod && (
+                            <button onClick={() => { setAllergenCheck(false); setAllergenInfo(prod) }}
+                              className="text-xs text-blue-600 hover:text-blue-800 underline">Details</button>
+                          )}
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {(prod?.allergene || []).map(a => (
+                            <span key={a} className="px-1.5 py-0.5 rounded bg-red-100 text-red-600 text-xs">
+                              {ALLERGEN_ICONS[a]} {ALLERGEN_KURZ[a]}
+                            </span>
+                          ))}
+                          {(prod?.kann_enthalten || []).map(a => (
+                            <span key={'k-' + a} className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-600 text-xs">
+                              {ALLERGEN_ICONS[a]} {ALLERGEN_KURZ[a]}?
+                            </span>
+                          ))}
+                          {!prod?.allergene?.length && !prod?.kann_enthalten?.length && (
+                            <span className="text-xs text-stone-400">Keine Allergendaten</span>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+
+                {/* Hinweis */}
+                <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-xl">
+                  <p className="text-xs text-blue-700">
+                    ℹ️ Diese Angaben dienen der Kundenberatung. Bei schweren Allergien bitte immer die vollständige Zutatenliste prüfen und Rücksprache mit der Backstube halten.
+                  </p>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
