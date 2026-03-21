@@ -35,6 +35,64 @@ const STAMMKUNDEN = [
 // Kaffee-Produkt (für Cross-Selling, noch nicht im Katalog)
 const KAFFEE = { id: 'kaffee', name: 'Kaffee', preis: 1.80, einheit: 'Stück', kategorie: 'Getränke' }
 
+// ============================================================
+// ZAHLWÖRTER → Ziffern (für Live-Erkennung)
+// ============================================================
+const ZAHLWOERTER = {
+  'ein': 1, 'eine': 1, 'einen': 1, 'eins': 1,
+  'zwei': 2, 'zwo': 2,
+  'drei': 3, 'vier': 4, 'fünf': 5, 'sechs': 6,
+  'sieben': 7, 'acht': 8, 'neun': 9, 'zehn': 10,
+  'elf': 11, 'zwölf': 12, 'fünfzehn': 15, 'zwanzig': 20,
+}
+
+/**
+ * Live-Matching: Durchsucht den Text nach Produktnamen/Aliasen und Mengen.
+ * Gibt ein Array von { produkt, menge } zurück.
+ */
+function liveMatchProdukte(text, produktListe) {
+  if (!text || text.length < 3) return []
+  const textLower = text.toLowerCase()
+  const gefunden = []
+  const bereitsGefunden = new Set()
+
+  for (const produkt of produktListe) {
+    // Alle suchbaren Namen: Name + Aliase
+    const suchNamen = [produkt.name, ...(produkt.aliase || [])].map(n => n.toLowerCase())
+
+    for (const suchName of suchNamen) {
+      if (suchName.length < 3) continue
+      const idx = textLower.indexOf(suchName)
+      if (idx === -1) continue
+      if (bereitsGefunden.has(produkt.id)) break
+
+      // Menge vor dem Produktnamen suchen
+      let menge = 1
+      const vorher = textLower.substring(Math.max(0, idx - 20), idx).trim()
+      const wörter = vorher.split(/\s+/)
+      const letztesWort = wörter[wörter.length - 1]
+
+      if (letztesWort) {
+        // Erst Zahlwort probieren
+        if (ZAHLWOERTER[letztesWort]) {
+          menge = ZAHLWOERTER[letztesWort]
+        } else {
+          // Dann Ziffer probieren
+          const zahl = parseInt(letztesWort)
+          if (!isNaN(zahl) && zahl > 0 && zahl <= 100) {
+            menge = zahl
+          }
+        }
+      }
+
+      gefunden.push({ produkt, menge })
+      bereitsGefunden.add(produkt.id)
+      break // Nächstes Produkt
+    }
+  }
+  return gefunden
+}
+
 // Hilfsfunktion: AudioBlob → Base64
 function blobToBase64(blob) {
   return new Promise((resolve, reject) => {
@@ -72,6 +130,10 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
   const zeitRef = useRef(null)
   const recognitionRef = useRef(null)
 
+  // Live-Vorschau Positionen (während Aufnahme)
+  const [livePositionen, setLivePositionen] = useState([])
+  const letzterLiveTextRef = useRef('')
+
   // UI State
   const [fehler, setFehler] = useState(null)
   const [abgeschlossen, setAbgeschlossen] = useState(false)
@@ -104,6 +166,25 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
     }
     return () => clearInterval(zeitRef.current)
   }, [sprachModus])
+
+  // ── LIVE-ERKENNUNG während Aufnahme ──
+  useEffect(() => {
+    if (!sprachModus || !liveText || produkte.length === 0) return
+    // Nur neue Teile des Textes analysieren, um Duplikate zu vermeiden
+    const matches = liveMatchProdukte(liveText, produkte)
+    if (matches.length > 0) {
+      setLivePositionen(matches.map(m => ({
+        produkt_id: m.produkt.id,
+        produkt_name: m.produkt.name || m.produkt.produkt_name,
+        menge: m.menge,
+        einheit: m.produkt.einheit || 'Stück',
+        preis_pro_stueck: m.produkt.preis,
+        preis_gesamt: m.produkt.preis != null ? Math.round(m.produkt.preis * m.menge * 100) / 100 : null,
+        kategorie: m.produkt.kategorie,
+        istLive: true, // Markierung für UI
+      })))
+    }
+  }, [liveText, sprachModus, produkte])
 
   // ── PRODUKT MANUELL HINZUFÜGEN ──
   function produktHinzufuegen(produkt) {
@@ -216,6 +297,8 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
   async function starteAufnahme() {
     setFehler(null)
     setLiveText('')
+    setLivePositionen([])
+    letzterLiveTextRef.current = ''
     audioChunksRef.current = []
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
@@ -240,6 +323,24 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
     stoppeSpeechRecognition()
     setSprachModus(false)
     setVerarbeitung(true)
+
+    // Live-Positionen sofort als echte Positionen übernehmen (Vorschau → fest)
+    if (livePositionen.length > 0) {
+      setPositionen(prev => {
+        const neu = [...prev]
+        livePositionen.forEach(lp => {
+          const existing = neu.findIndex(p => p.produkt_id === lp.produkt_id)
+          if (existing >= 0) {
+            neu[existing] = { ...neu[existing], menge: lp.menge, preis_gesamt: lp.preis_gesamt }
+          } else {
+            neu.push({ ...lp, istLive: false })
+          }
+        })
+        return neu
+      })
+      setLivePositionen([])
+    }
+
     mediaRecorderRef.current.stop()
     streamRef.current?.getTracks().forEach(t => t.stop())
     await new Promise(r => setTimeout(r, 300))
@@ -251,16 +352,24 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
       const audioBlob = new Blob(chunks, { type: mimeType })
       const audioBase64 = await blobToBase64(audioBlob)
 
-      // Schritt 1: Transkription
+      // Schritt 1: Transkription (Voxtral – genauer als Browser)
       const transkriptErgebnis = await transkribiere(audioBase64, mimeType)
       const text = transkriptErgebnis.text || liveText || ''
 
-      // Schritt 2: Erkennung
+      // Schritt 2: Erkennung (Mistral Large – Smarttalk raus, Positionen extrahieren)
       const erkennungsErgebnis = await erkenneSprache(text)
       if (erkennungsErgebnis.success && erkennungsErgebnis.positionen?.length > 0) {
-        // Erkannte Positionen zur bestehenden Bestellung hinzufügen
+        // Finale Positionen ersetzen die vorläufigen komplett
         setPositionen(prev => {
-          const neu = [...prev]
+          // Behalte manuell hinzugefügte Positionen (die vor der Aufnahme da waren)
+          const manuell = prev.filter(p => !livePositionen.some(lp => lp.produkt_id === p.produkt_id) || p.istLive === undefined)
+          // Aber entferne die, die aus der Live-Erkennung kamen
+          const vorherigeManuell = prev.filter(p => {
+            // Position war schon vor Aufnahme da (nicht aus dieser Live-Session)
+            return !livePositionen.some(lp => lp.produkt_id === p.produkt_id)
+          })
+
+          const neu = [...vorherigeManuell]
           erkennungsErgebnis.positionen.forEach(ep => {
             const existing = neu.findIndex(p => p.produkt_id === ep.produkt_id)
             if (existing >= 0) {
@@ -294,6 +403,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
 
   function neueBestellung() {
     setPositionen([])
+    setLivePositionen([])
     setAbgeschlossen(false)
     setFehler(null)
     setCrossSelling(null)
@@ -302,7 +412,16 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
   }
 
   // ── BERECHNUNGEN ──
-  const gesamtpreis = positionen.reduce((sum, p) => sum + (p.preis_gesamt || 0), 0)
+  // Kombinierte Positionen: echte + Live-Vorschau (ohne Duplikate)
+  const anzeigePositionen = [...positionen]
+  if (sprachModus) {
+    livePositionen.forEach(lp => {
+      if (!anzeigePositionen.some(p => p.produkt_id === lp.produkt_id)) {
+        anzeigePositionen.push(lp)
+      }
+    })
+  }
+  const gesamtpreis = anzeigePositionen.reduce((sum, p) => sum + (p.preis_gesamt || 0), 0)
   const gefilterteProdukte = aktiveKategorie === 'alle'
     ? produkte
     : produkte.filter(p => p.kategorie === aktiveKategorie)
@@ -418,7 +537,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
         <div className="w-1/2 flex flex-col overflow-hidden">
           {/* Bestellpositionen */}
           <div className="flex-1 overflow-y-auto p-3">
-            {positionen.length === 0 ? (
+            {anzeigePositionen.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-baeckerei-text-secondary">
                 <span className="text-4xl mb-3">🛒</span>
                 <p className="text-lg font-medium">Noch keine Positionen</p>
@@ -426,32 +545,53 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
               </div>
             ) : (
               <div className="flex flex-col gap-2">
-                {positionen.map((pos, idx) => (
-                  <div key={idx} className="bg-white rounded-xl border border-stone-200 p-3 flex items-center gap-3">
-                    {/* Produktname */}
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-baeckerei-text text-sm truncate">{pos.produkt_name}</p>
-                      {pos.preis_pro_stueck != null && (
-                        <p className="text-xs text-baeckerei-text-secondary">{formatPreis(pos.preis_pro_stueck)}/{pos.einheit || 'Stk.'}</p>
+                {anzeigePositionen.map((pos, idx) => {
+                  const istLive = pos.istLive === true
+                  return (
+                    <div key={pos.produkt_id + '-' + idx}
+                      className={`rounded-xl border p-3 flex items-center gap-3 transition-all
+                        ${istLive
+                          ? 'bg-blue-50 border-blue-200 border-dashed animate-pulse'
+                          : 'bg-white border-stone-200'
+                        }`}>
+                      {/* Live-Indikator */}
+                      {istLive && (
+                        <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse flex-shrink-0" />
+                      )}
+                      {/* Produktname */}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-baeckerei-text text-sm truncate">
+                          {pos.produkt_name}
+                          {istLive && <span className="text-blue-500 text-xs ml-2">live erkannt</span>}
+                        </p>
+                        {pos.preis_pro_stueck != null && (
+                          <p className="text-xs text-baeckerei-text-secondary">{formatPreis(pos.preis_pro_stueck)}/{pos.einheit || 'Stk.'}</p>
+                        )}
+                      </div>
+                      {/* Menge */}
+                      <div className="flex items-center gap-1">
+                        {!istLive && (
+                          <button onClick={() => aendereMenge(idx, pos.menge - 1)}
+                            className="w-8 h-8 rounded-lg bg-stone-100 hover:bg-stone-200 text-lg font-bold flex items-center justify-center">−</button>
+                        )}
+                        <span className="w-8 text-center font-bold text-baeckerei-text">{pos.menge}</span>
+                        {!istLive && (
+                          <button onClick={() => aendereMenge(idx, pos.menge + 1)}
+                            className="w-8 h-8 rounded-lg bg-stone-100 hover:bg-stone-200 text-lg font-bold flex items-center justify-center">+</button>
+                        )}
+                      </div>
+                      {/* Preis */}
+                      <span className="font-bold text-baeckerei-text w-16 text-right text-sm">
+                        {formatPreis(pos.preis_gesamt)}
+                      </span>
+                      {/* Löschen */}
+                      {!istLive && (
+                        <button onClick={() => entfernePosition(idx)}
+                          className="w-7 h-7 rounded-lg text-stone-300 hover:text-red-500 hover:bg-red-50 flex items-center justify-center text-sm">✕</button>
                       )}
                     </div>
-                    {/* Menge */}
-                    <div className="flex items-center gap-1">
-                      <button onClick={() => aendereMenge(idx, pos.menge - 1)}
-                        className="w-8 h-8 rounded-lg bg-stone-100 hover:bg-stone-200 text-lg font-bold flex items-center justify-center">−</button>
-                      <span className="w-8 text-center font-bold text-baeckerei-text">{pos.menge}</span>
-                      <button onClick={() => aendereMenge(idx, pos.menge + 1)}
-                        className="w-8 h-8 rounded-lg bg-stone-100 hover:bg-stone-200 text-lg font-bold flex items-center justify-center">+</button>
-                    </div>
-                    {/* Preis */}
-                    <span className="font-bold text-baeckerei-text w-16 text-right text-sm">
-                      {formatPreis(pos.preis_gesamt)}
-                    </span>
-                    {/* Löschen */}
-                    <button onClick={() => entfernePosition(idx)}
-                      className="w-7 h-7 rounded-lg text-stone-300 hover:text-red-500 hover:bg-red-50 flex items-center justify-center text-sm">✕</button>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )}
           </div>
