@@ -1,11 +1,48 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { transkribiere, erkenneSprache, speichereKassenBestellung } from '../services/api'
+import { transkribiere, erkenneSprache, speichereKassenBestellung, ladeKatalog } from '../services/api'
 
-// Ampelfarben
-const PLAUSI_STYLE = {
-  gruen: { bg: 'bg-green-50', border: 'border-green-300', badge: 'bg-green-100 text-green-800', dot: 'bg-green-500', label: 'OK' },
-  gelb:  { bg: 'bg-yellow-50', border: 'border-yellow-300', badge: 'bg-yellow-100 text-yellow-800', dot: 'bg-yellow-500', label: 'Prüfen' },
-  rot:   { bg: 'bg-red-50', border: 'border-red-300', badge: 'bg-red-100 text-red-800', dot: 'bg-red-500', label: 'Unsicher' },
+// ============================================================
+// PRODUKT-KATEGORIEN (für Touchscreen-Buttons)
+// ============================================================
+const KATEGORIEN = [
+  { id: 'alle', label: 'Alle', icon: '🛒' },
+  { id: 'Brötchen', label: 'Brötchen', icon: '🥐' },
+  { id: 'Laugengebäck', label: 'Laugen', icon: '🥨' },
+  { id: 'Feingebäck', label: 'Süßes', icon: '🥐' },
+  { id: 'Brot', label: 'Brot', icon: '🍞' },
+  { id: 'Torten & Kuchen', label: 'Kuchen', icon: '🎂' },
+  { id: 'Belegware', label: 'Belag', icon: '🧀' },
+  { id: 'Getränke', label: 'Getränke', icon: '☕' },
+]
+
+// Demo-Stammkunden
+const STAMMKUNDEN = [
+  { id: 'sk1', name: 'Herr Mayer', letzte: [
+    { produkt_id: 'weizenbroetchen', name: 'Weizenbrötchen', menge: 6, preis: 0.45 },
+    { produkt_id: 'mohnbroetchen', name: 'Mohnbrötchen', menge: 2, preis: 0.50 },
+    { produkt_id: 'mischbrot', name: 'Mischbrot (Weizen/Roggen)', menge: 1, preis: 3.90 },
+  ]},
+  { id: 'sk2', name: 'Frau Schmidt', letzte: [
+    { produkt_id: 'croissant', name: 'Buttercroissant', menge: 2, preis: 1.80 },
+    { produkt_id: 'dinkelbrot', name: 'Dinkelvollkornbrot', menge: 1, preis: 4.50 },
+  ]},
+  { id: 'sk3', name: 'Herr Klein', letzte: [
+    { produkt_id: 'koernerbroetchen', name: 'Körnerbrötchen', menge: 4, preis: 0.55 },
+    { produkt_id: 'rosinenschnecke', name: 'Rosinenschnecke', menge: 1, preis: 1.60 },
+  ]},
+]
+
+// Kaffee-Produkt (für Cross-Selling, noch nicht im Katalog)
+const KAFFEE = { id: 'kaffee', name: 'Kaffee', preis: 1.80, einheit: 'Stück', kategorie: 'Getränke' }
+
+// Hilfsfunktion: AudioBlob → Base64
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onloadend = () => resolve(reader.result.split(',')[1])
+    reader.onerror = reject
+    reader.readAsDataURL(blob)
+  })
 }
 
 function formatPreis(wert) {
@@ -13,66 +50,146 @@ function formatPreis(wert) {
   return wert.toFixed(2).replace('.', ',') + ' €'
 }
 
-// Hilfsfunktion: AudioBlob → Base64
-function blobToBase64(blob) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onloadend = () => {
-      const base64 = reader.result.split(',')[1]
-      resolve(base64)
-    }
-    reader.onerror = reject
-    reader.readAsDataURL(blob)
-  })
-}
-
+// ============================================================
+// HAUPTKOMPONENTE
+// ============================================================
 export default function KassenApp({ mitarbeiter, onAbmelden }) {
-  // State Machine: idle | recording | processing | reviewing | confirmed
-  const [phase, setPhase] = useState('idle')
-  const [liveText, setLiveText] = useState('')
-  const [transkriptText, setTranskriptText] = useState('')
-  const [positionen, setPositionen] = useState([])
-  const [kommentar, setKommentar] = useState('')
-  const [fehler, setFehler] = useState(null)
-  const [aufnahmeZeit, setAufnahmeZeit] = useState(0)
+  // Produkte aus Katalog
+  const [produkte, setProdukte] = useState([])
+  const [aktiveKategorie, setAktiveKategorie] = useState('alle')
 
-  // Refs für MediaRecorder
+  // Bestellliste
+  const [positionen, setPositionen] = useState([])
+
+  // Spracherkennung
+  const [sprachModus, setSprachModus] = useState(false) // false=idle, true=recording
+  const [verarbeitung, setVerarbeitung] = useState(false)
+  const [liveText, setLiveText] = useState('')
+  const [aufnahmeZeit, setAufnahmeZeit] = useState(0)
   const mediaRecorderRef = useRef(null)
   const audioChunksRef = useRef([])
   const streamRef = useRef(null)
   const zeitRef = useRef(null)
   const recognitionRef = useRef(null)
 
+  // UI State
+  const [fehler, setFehler] = useState(null)
+  const [abgeschlossen, setAbgeschlossen] = useState(false)
+  const [zahlart, setZahlart] = useState('bar')
+  const [stammkundePopup, setStammkundePopup] = useState(false)
+  const [crossSelling, setCrossSelling] = useState(null) // null oder Produkt-Vorschlag
+
+  // Katalog laden
+  useEffect(() => {
+    ladeKatalog().then(data => {
+      // Nur Backwaren (keine Rohstoffe) + Kaffee hinzufügen
+      const backwaren = (data.backwaren || []).map(p => ({
+        ...p,
+        produkt_name: p.name,
+      }))
+      setProdukte([...backwaren, KAFFEE])
+    }).catch(() => {
+      // Fallback: leerer Katalog
+      setProdukte([KAFFEE])
+    })
+  }, [])
+
   // Aufnahmezeit hochzählen
   useEffect(() => {
-    if (phase === 'recording') {
+    if (sprachModus) {
       setAufnahmeZeit(0)
-      zeitRef.current = setInterval(() => {
-        setAufnahmeZeit(s => s + 1)
-      }, 1000)
+      zeitRef.current = setInterval(() => setAufnahmeZeit(s => s + 1), 1000)
     } else {
       clearInterval(zeitRef.current)
     }
     return () => clearInterval(zeitRef.current)
-  }, [phase])
+  }, [sprachModus])
 
-  function formatZeit(sek) {
-    const m = Math.floor(sek / 60).toString().padStart(2, '0')
-    const s = (sek % 60).toString().padStart(2, '0')
-    return `${m}:${s}`
+  // ── PRODUKT MANUELL HINZUFÜGEN ──
+  function produktHinzufuegen(produkt) {
+    setPositionen(prev => {
+      const existing = prev.findIndex(p => p.produkt_id === produkt.id)
+      if (existing >= 0) {
+        // Menge erhöhen
+        return prev.map((p, i) => i === existing ? {
+          ...p,
+          menge: p.menge + 1,
+          preis_gesamt: Math.round((p.menge + 1) * p.preis_pro_stueck * 100) / 100
+        } : p)
+      }
+      // Neue Position
+      return [...prev, {
+        produkt_id: produkt.id,
+        produkt_name: produkt.name || produkt.produkt_name,
+        menge: 1,
+        einheit: produkt.einheit || 'Stück',
+        preis_pro_stueck: produkt.preis,
+        preis_gesamt: produkt.preis,
+        kategorie: produkt.kategorie,
+      }]
+    })
+
+    // Cross-Selling Check
+    prüfeCrossSelling(produkt)
   }
 
-  // Browser SpeechRecognition für Live-Anzeige
+  // ── CROSS-SELLING LOGIK ──
+  function prüfeCrossSelling(produkt) {
+    const süßeKategorien = ['Feingebäck', 'Torten & Kuchen']
+    const brötchenKategorien = ['Brötchen', 'Laugengebäck']
+    const hatSchonKaffee = positionen.some(p => p.produkt_id === 'kaffee')
+
+    if (!hatSchonKaffee && (süßeKategorien.includes(produkt.kategorie) || brötchenKategorien.includes(produkt.kategorie))) {
+      setCrossSelling({
+        text: produkt.kategorie === 'Feingebäck' || produkt.kategorie === 'Torten & Kuchen'
+          ? `Dazu einen Kaffee? Passt perfekt zu ${produkt.name || produkt.produkt_name}!`
+          : `Frühstücksmenü: Dazu einen Kaffee für nur ${formatPreis(KAFFEE.preis)}?`,
+        produkt: KAFFEE,
+      })
+    }
+  }
+
+  // ── MENGE ÄNDERN ──
+  function aendereMenge(idx, neueMenge) {
+    const menge = Math.max(0, parseInt(neueMenge) || 0)
+    if (menge === 0) {
+      setPositionen(prev => prev.filter((_, i) => i !== idx))
+      return
+    }
+    setPositionen(prev => prev.map((p, i) => i === idx ? {
+      ...p,
+      menge,
+      preis_gesamt: p.preis_pro_stueck != null ? Math.round(p.preis_pro_stueck * menge * 100) / 100 : null
+    } : p))
+  }
+
+  // ── POSITION ENTFERNEN ──
+  function entfernePosition(idx) {
+    setPositionen(prev => prev.filter((_, i) => i !== idx))
+  }
+
+  // ── STAMMKUNDE LADEN ──
+  function ladeStammkunde(kunde) {
+    const neuePositionen = kunde.letzte.map(p => ({
+      produkt_id: p.produkt_id,
+      produkt_name: p.name,
+      menge: p.menge,
+      einheit: 'Stück',
+      preis_pro_stueck: p.preis,
+      preis_gesamt: Math.round(p.preis * p.menge * 100) / 100,
+    }))
+    setPositionen(neuePositionen)
+    setStammkundePopup(false)
+  }
+
+  // ── SPRACHERKENNUNG ──
   const starteSpeechRecognition = useCallback(() => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition
     if (!SR) return
-
     const r = new SR()
     r.lang = 'de-DE'
     r.continuous = true
     r.interimResults = true
-    r.maxAlternatives = 1
-
     r.onresult = (event) => {
       let text = ''
       for (let i = 0; i < event.results.length; i++) {
@@ -80,18 +197,10 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
       }
       setLiveText(text.trim())
     }
-
-    r.onerror = () => {
-      // Stille bei SpeechRecognition-Fehler – Voxtral macht die finale Transkription
-    }
-
+    r.onerror = () => {}
     r.onend = () => {
-      // Auto-restart wenn noch im Recording-Modus
-      if (recognitionRef.current === r) {
-        try { r.start() } catch {}
-      }
+      if (recognitionRef.current === r) try { r.start() } catch {}
     }
-
     recognitionRef.current = r
     try { r.start() } catch {}
   }, [])
@@ -104,160 +213,140 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
     }
   }
 
-  // Aufnahme starten
   async function starteAufnahme() {
     setFehler(null)
     setLiveText('')
-    setTranskriptText('')
-    setPositionen([])
-    setKommentar('')
     audioChunksRef.current = []
-
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       streamRef.current = stream
-
-      // Besten verfügbaren MIME-Type wählen
       const mimeTypes = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4']
       const supportedMime = mimeTypes.find(t => MediaRecorder.isTypeSupported(t)) || ''
-
       const recorder = new MediaRecorder(stream, supportedMime ? { mimeType: supportedMime } : {})
       mediaRecorderRef.current = recorder
-
       recorder.ondataavailable = (e) => {
-        if (e.data && e.data.size > 0) {
-          audioChunksRef.current.push(e.data)
-        }
+        if (e.data?.size > 0) audioChunksRef.current.push(e.data)
       }
-
-      recorder.start(1000) // Chunks jede Sekunde
-      setPhase('recording')
+      recorder.start(1000)
+      setSprachModus(true)
       starteSpeechRecognition()
-
-    } catch (err) {
-      setFehler('Mikrofon-Zugriff verweigert. Bitte Berechtigung erteilen.')
-      console.error('Mikrofon-Fehler:', err)
+    } catch {
+      setFehler('Mikrofon-Zugriff verweigert.')
     }
   }
 
-  // Aufnahme stoppen & verarbeiten
-  async function schliesseAb() {
+  async function stoppeAufnahme() {
     if (!mediaRecorderRef.current) return
-
     stoppeSpeechRecognition()
-    setPhase('processing')
-
-    // Stream und Recorder stoppen
+    setSprachModus(false)
+    setVerarbeitung(true)
     mediaRecorderRef.current.stop()
     streamRef.current?.getTracks().forEach(t => t.stop())
-
-    // Kurz warten bis letzter Chunk da ist
     await new Promise(r => setTimeout(r, 300))
 
     try {
       const chunks = audioChunksRef.current
-      if (chunks.length === 0) {
-        throw new Error('Keine Audio-Daten aufgenommen')
-      }
-
+      if (chunks.length === 0) throw new Error('Keine Audio-Daten')
       const mimeType = chunks[0].type || 'audio/webm'
       const audioBlob = new Blob(chunks, { type: mimeType })
-
-      // Schritt 1: Audio → Transkription (Voxtral)
       const audioBase64 = await blobToBase64(audioBlob)
+
+      // Schritt 1: Transkription
       const transkriptErgebnis = await transkribiere(audioBase64, mimeType)
-
-      if (!transkriptErgebnis.success && !transkriptErgebnis.text) {
-        throw new Error(transkriptErgebnis.error || 'Transkription fehlgeschlagen')
-      }
-
       const text = transkriptErgebnis.text || liveText || ''
-      setTranskriptText(text)
 
-      // Schritt 2: Transkription → Bestellpositionen (Mistral Large + Matching)
+      // Schritt 2: Erkennung
       const erkennungsErgebnis = await erkenneSprache(text)
-
-      if (!erkennungsErgebnis.success) {
-        throw new Error(erkennungsErgebnis.error || 'Erkennung fehlgeschlagen')
+      if (erkennungsErgebnis.success && erkennungsErgebnis.positionen?.length > 0) {
+        // Erkannte Positionen zur bestehenden Bestellung hinzufügen
+        setPositionen(prev => {
+          const neu = [...prev]
+          erkennungsErgebnis.positionen.forEach(ep => {
+            const existing = neu.findIndex(p => p.produkt_id === ep.produkt_id)
+            if (existing >= 0) {
+              neu[existing] = {
+                ...neu[existing],
+                menge: neu[existing].menge + ep.menge,
+                preis_gesamt: ep.preis_pro_stueck != null
+                  ? Math.round((neu[existing].menge + ep.menge) * ep.preis_pro_stueck * 100) / 100
+                  : null
+              }
+            } else {
+              neu.push(ep)
+            }
+          })
+          return neu
+        })
       }
-
-      setPositionen(erkennungsErgebnis.positionen || [])
-      setKommentar(erkennungsErgebnis.kommentar || '')
-      setPhase('reviewing')
-
     } catch (err) {
-      setFehler(err.message)
-      setPhase('idle')
+      setFehler('Spracherkennung fehlgeschlagen: ' + err.message)
     }
+    setVerarbeitung(false)
   }
 
-  // Menge einer Position korrigieren
-  function aendereMenge(idx, neueMenge) {
-    setPositionen(prev => prev.map((p, i) => {
-      if (i !== idx) return p
-      const menge = Math.max(0, parseInt(neueMenge) || 0)
-      return {
-        ...p,
-        menge,
-        preis_gesamt: p.preis_pro_stueck != null ? Math.round(p.preis_pro_stueck * menge * 100) / 100 : null
-      }
-    }))
-  }
-
-  // Position entfernen
-  function entfernePosition(idx) {
-    setPositionen(prev => prev.filter((_, i) => i !== idx))
-  }
-
-  // Bestellung bestätigen und speichern
-  async function bestaetigen() {
-    setPhase('confirmed')
+  // ── BESTELLUNG ABSCHLIESSEN ──
+  async function kassieren() {
+    setAbgeschlossen(true)
     try {
-      // Positionen in das Format bringen das /api/bestellung erwartet
-      const positionenZumSpeichern = positionen.map(p => ({
-        produkt_id: p.produkt_id || null,
-        produkt_name: p.produkt_name || p.produkt,
-        menge: p.menge,
-        einheit: p.einheit || 'Stück',
-        kategorie: p.kategorie || 'Sonstiges',
-        plausibilitaet: p.plausibilitaet || 'gruen',
-        konfidenz: p.konfidenz || 1,
-        preis_pro_stueck: p.preis_pro_stueck || null,
-        preis_gesamt: p.preis_gesamt || null
-      }))
-      await speichereKassenBestellung(
-        positionenZumSpeichern,
-        kommentar,
-        transkriptText
-      )
-    } catch (err) {
-      // Speicherfehler still ignorieren – Bestätigung ist trotzdem angezeigt
-      console.warn('Bestellung konnte nicht gespeichert werden:', err.message)
-    }
+      await speichereKassenBestellung(positionen, '', '')
+    } catch {}
   }
 
-  // Neue Bestellung starten
   function neueBestellung() {
-    setPhase('idle')
-    setLiveText('')
-    setTranskriptText('')
     setPositionen([])
-    setKommentar('')
+    setAbgeschlossen(false)
     setFehler(null)
-    setAufnahmeZeit(0)
-    audioChunksRef.current = []
+    setCrossSelling(null)
+    setZahlart('bar')
+    setLiveText('')
   }
 
-  // Gesamtpreis berechnen
+  // ── BERECHNUNGEN ──
   const gesamtpreis = positionen.reduce((sum, p) => sum + (p.preis_gesamt || 0), 0)
-  const hatUnbekanntePreise = positionen.some(p => p.preis_pro_stueck == null)
+  const gefilterteProdukte = aktiveKategorie === 'alle'
+    ? produkte
+    : produkte.filter(p => p.kategorie === aktiveKategorie)
 
-  // === RENDER ===
+  function formatZeit(sek) {
+    const m = Math.floor(sek / 60).toString().padStart(2, '0')
+    const s = (sek % 60).toString().padStart(2, '0')
+    return `${m}:${s}`
+  }
 
+  // ── BESTÄTIGT SCREEN ──
+  if (abgeschlossen) {
+    return (
+      <div className="min-h-screen bg-baeckerei-bg flex flex-col items-center justify-center p-6">
+        <div className="w-24 h-24 rounded-full bg-green-100 flex items-center justify-center text-5xl mb-6">✅</div>
+        <h2 className="text-3xl font-bold text-baeckerei-text mb-2">Bestellung abgeschlossen!</h2>
+        <p className="text-baeckerei-text-secondary text-lg mb-2">
+          {positionen.length} Position{positionen.length !== 1 ? 'en' : ''} · {formatPreis(gesamtpreis)} · {zahlart === 'bar' ? 'Barzahlung' : 'Kartenzahlung'}
+        </p>
+        <div className="w-full max-w-md bg-white rounded-2xl border border-stone-200 divide-y divide-stone-100 my-6">
+          {positionen.map((p, i) => (
+            <div key={i} className="flex justify-between px-5 py-3">
+              <span>{p.menge}× {p.produkt_name}</span>
+              <span className="font-semibold">{formatPreis(p.preis_gesamt)}</span>
+            </div>
+          ))}
+          <div className="flex justify-between px-5 py-3 bg-stone-50 font-bold text-lg">
+            <span>Gesamt</span>
+            <span className="text-baeckerei-accent">{formatPreis(gesamtpreis)}</span>
+          </div>
+        </div>
+        <button onClick={neueBestellung}
+          className="px-8 py-4 rounded-2xl bg-baeckerei-accent hover:bg-baeckerei-accent-hover text-white text-xl font-bold shadow-lg">
+          Nächster Kunde
+        </button>
+      </div>
+    )
+  }
+
+  // ── HAUPT-LAYOUT ──
   return (
-    <div className="min-h-screen bg-baeckerei-bg flex flex-col">
-      {/* Header */}
-      <header className="bg-white border-b border-stone-200 px-6 py-4 flex items-center justify-between">
+    <div className="h-screen bg-baeckerei-bg flex flex-col overflow-hidden">
+      {/* ═══ HEADER ═══ */}
+      <header className="bg-white border-b border-stone-200 px-4 py-2 flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-3">
           <span className="text-2xl">🥐</span>
           <div>
@@ -266,261 +355,212 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <button
-            onClick={onAbmelden}
-            className="text-sm text-baeckerei-text-secondary hover:text-baeckerei-text underline"
-          >
+          {/* Stammkunde-Button */}
+          <button onClick={() => setStammkundePopup(true)}
+            className="px-3 py-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-sm font-medium hover:bg-amber-100">
+            👤 Stammkunde
+          </button>
+          <button onClick={onAbmelden}
+            className="text-sm text-baeckerei-text-secondary hover:text-baeckerei-text underline">
             Abmelden
           </button>
         </div>
-        {phase !== 'idle' && phase !== 'confirmed' && (
-          <button
-            onClick={neueBestellung}
-            className="text-sm text-red-500 hover:text-red-700 font-medium"
-          >
-            Abbrechen
-          </button>
-        )}
       </header>
 
-      <main className="flex-1 flex flex-col items-center justify-center p-6 gap-6 max-w-2xl mx-auto w-full">
+      {/* ═══ FEHLER ═══ */}
+      {fehler && (
+        <div className="mx-4 mt-2 bg-red-50 border border-red-200 rounded-xl p-3 text-red-700 text-sm flex justify-between items-center flex-shrink-0">
+          <span>{fehler}</span>
+          <button onClick={() => setFehler(null)} className="text-red-400 hover:text-red-600 ml-2">✕</button>
+        </div>
+      )}
 
-        {/* ── IDLE ── */}
-        {phase === 'idle' && (
-          <div className="w-full flex flex-col items-center gap-6">
-            {fehler && (
-              <div className="w-full bg-red-50 border border-red-200 rounded-2xl p-4 text-red-700 text-sm">
-                {fehler}
-              </div>
-            )}
-            <div className="text-center">
-              <p className="text-baeckerei-text-secondary text-lg mb-2">Bereit für neue Bestellung</p>
-              <p className="text-sm text-baeckerei-text-secondary">Drücke den Button, bediene den Kunden wie gewohnt – das System hört mit.</p>
-            </div>
-            <button
-              onClick={starteAufnahme}
-              className="w-48 h-48 rounded-full bg-baeckerei-accent hover:bg-baeckerei-accent-hover text-white text-xl font-bold shadow-xl active:scale-95 transition-all flex flex-col items-center justify-center gap-2"
-            >
-              <span className="text-4xl">🎙️</span>
-              <span>Neue Bestellung</span>
-            </button>
+      {/* ═══ HAUPTBEREICH ═══ */}
+      <div className="flex-1 flex overflow-hidden">
+
+        {/* ── LINKE SEITE: PRODUKT-BUTTONS ── */}
+        <div className="w-1/2 flex flex-col border-r border-stone-200 overflow-hidden">
+          {/* Kategorie-Tabs */}
+          <div className="flex gap-1 p-2 bg-stone-50 border-b border-stone-200 overflow-x-auto flex-shrink-0">
+            {KATEGORIEN.map(kat => (
+              <button key={kat.id} onClick={() => setAktiveKategorie(kat.id)}
+                className={`px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-colors
+                  ${aktiveKategorie === kat.id
+                    ? 'bg-baeckerei-accent text-white shadow-sm'
+                    : 'bg-white text-baeckerei-text-secondary border border-stone-200 hover:border-baeckerei-accent'
+                  }`}>
+                {kat.icon} {kat.label}
+              </button>
+            ))}
           </div>
-        )}
 
-        {/* ── RECORDING ── */}
-        {phase === 'recording' && (
-          <div className="w-full flex flex-col items-center gap-6">
-            {/* Aufnahme-Indikator */}
-            <div className="flex items-center gap-3 bg-red-50 border border-red-200 rounded-2xl px-6 py-3">
-              <span className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
-              <span className="font-semibold text-red-700">Aufnahme läuft</span>
-              <span className="text-red-500 font-mono text-sm ml-2">{formatZeit(aufnahmeZeit)}</span>
-            </div>
-
-            {/* Live-Transkription */}
-            <div className="w-full bg-white rounded-2xl border border-stone-200 p-4 min-h-32">
-              <p className="text-xs text-baeckerei-text-secondary mb-2 font-medium">Live-Mitschrift</p>
-              {liveText ? (
-                <p className="text-baeckerei-text leading-relaxed">{liveText}</p>
-              ) : (
-                <p className="text-baeckerei-text-secondary italic text-sm">Warte auf Spracheingabe…</p>
-              )}
-            </div>
-
-            {/* Abschließen-Button */}
-            <button
-              onClick={schliesseAb}
-              className="w-full max-w-sm py-5 rounded-2xl bg-baeckerei-accent hover:bg-baeckerei-accent-hover text-white text-xl font-bold shadow-lg active:scale-95 transition-all"
-            >
-              Abschließen →
-            </button>
-            <p className="text-xs text-baeckerei-text-secondary text-center">
-              Drücke wenn der Kunde fertig bestellt hat
-            </p>
-          </div>
-        )}
-
-        {/* ── PROCESSING ── */}
-        {phase === 'processing' && (
-          <div className="flex flex-col items-center gap-6 text-center">
-            <div className="w-20 h-20 rounded-full border-4 border-baeckerei-accent border-t-transparent animate-spin" />
-            <div>
-              <p className="text-xl font-semibold text-baeckerei-text">Bestellung wird erkannt…</p>
-              <p className="text-sm text-baeckerei-text-secondary mt-1">Smalltalk wird herausgefiltert</p>
-            </div>
-          </div>
-        )}
-
-        {/* ── REVIEWING ── */}
-        {phase === 'reviewing' && (
-          <div className="w-full flex flex-col gap-4">
-            <h2 className="text-xl font-bold text-baeckerei-text">Bestellung prüfen</h2>
-
-            {/* Transkript (aufklappbar) */}
-            <details className="bg-stone-50 rounded-xl border border-stone-200">
-              <summary className="px-4 py-3 cursor-pointer text-sm text-baeckerei-text-secondary font-medium select-none">
-                Aufgenommener Text anzeigen
-              </summary>
-              <p className="px-4 pb-3 text-sm text-baeckerei-text leading-relaxed">{transkriptText || '(kein Text)'}</p>
-            </details>
-
-            {/* Keine Positionen erkannt */}
-            {positionen.length === 0 && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-5 text-center">
-                <p className="text-yellow-800 font-medium">Keine Bestellpositionen erkannt</p>
-                <p className="text-yellow-700 text-sm mt-1">Bitte Bestellung erneut aufnehmen</p>
-                <button onClick={neueBestellung} className="mt-3 px-4 py-2 bg-baeckerei-accent text-white rounded-xl text-sm font-medium">
-                  Neu starten
-                </button>
-              </div>
-            )}
-
-            {/* Positionsliste */}
-            {positionen.length > 0 && (
-              <>
-                <div className="flex flex-col gap-2">
-                  {positionen.map((pos, idx) => {
-                    const style = PLAUSI_STYLE[pos.plausibilitaet] || PLAUSI_STYLE.gelb
-                    return (
-                      <div key={idx} className={`bg-white rounded-2xl border-2 ${style.border} p-4 flex items-center gap-4`}>
-                        {/* Ampel-Dot */}
-                        <span className={`w-3 h-3 rounded-full flex-shrink-0 ${style.dot}`} title={pos.grund || ''} />
-
-                        {/* Produktname */}
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-baeckerei-text truncate">
-                            {pos.produkt_name || pos.produkt}
-                          </p>
-                          {!pos.katalog_match && (
-                            <p className="text-xs text-baeckerei-rot">Nicht im Katalog gefunden</p>
-                          )}
-                          {pos.grund && pos.plausibilitaet !== 'gruen' && (
-                            <p className="text-xs text-baeckerei-text-secondary">{pos.grund}</p>
-                          )}
-                        </div>
-
-                        {/* Menge (editierbar) */}
-                        <div className="flex items-center gap-1">
-                          <button
-                            onClick={() => aendereMenge(idx, pos.menge - 1)}
-                            className="w-8 h-8 rounded-lg bg-stone-100 hover:bg-stone-200 text-lg font-bold flex items-center justify-center"
-                          >−</button>
-                          <input
-                            type="number"
-                            min="0"
-                            value={pos.menge}
-                            onChange={e => aendereMenge(idx, e.target.value)}
-                            className="w-14 text-center border border-stone-300 rounded-lg py-1 font-semibold"
-                          />
-                          <button
-                            onClick={() => aendereMenge(idx, pos.menge + 1)}
-                            className="w-8 h-8 rounded-lg bg-stone-100 hover:bg-stone-200 text-lg font-bold flex items-center justify-center"
-                          >+</button>
-                        </div>
-
-                        {/* Einheit */}
-                        <span className="text-sm text-baeckerei-text-secondary w-12 text-right flex-shrink-0">
-                          {pos.einheit}
-                        </span>
-
-                        {/* Preis */}
-                        <div className="text-right flex-shrink-0 w-20">
-                          {pos.preis_gesamt != null ? (
-                            <p className="font-semibold text-baeckerei-text">{formatPreis(pos.preis_gesamt)}</p>
-                          ) : (
-                            <p className="text-sm text-baeckerei-text-secondary">—</p>
-                          )}
-                          {pos.preis_pro_stueck != null && (
-                            <p className="text-xs text-baeckerei-text-secondary">{formatPreis(pos.preis_pro_stueck)}/Stk.</p>
-                          )}
-                        </div>
-
-                        {/* Löschen */}
-                        <button
-                          onClick={() => entfernePosition(idx)}
-                          className="w-8 h-8 rounded-lg text-stone-400 hover:text-red-500 hover:bg-red-50 flex items-center justify-center flex-shrink-0"
-                          title="Position entfernen"
-                        >✕</button>
-                      </div>
-                    )
-                  })}
-                </div>
-
-                {/* Kommentar */}
-                {kommentar && (
-                  <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800">
-                    <span className="font-medium">Hinweis: </span>{kommentar}
-                  </div>
-                )}
-
-                {/* Gesamtpreis */}
-                <div className="bg-white rounded-2xl border-2 border-stone-200 px-5 py-4 flex items-center justify-between">
-                  <span className="font-bold text-lg text-baeckerei-text">Gesamt</span>
-                  <div className="text-right">
-                    <span className="font-bold text-2xl text-baeckerei-accent">{formatPreis(gesamtpreis)}</span>
-                    {hatUnbekanntePreise && (
-                      <p className="text-xs text-baeckerei-text-secondary">* einige Preise unbekannt</p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Aktionen */}
-                <div className="flex gap-3">
-                  <button
-                    onClick={neueBestellung}
-                    className="flex-1 py-4 rounded-2xl border-2 border-stone-300 text-baeckerei-text font-semibold hover:bg-stone-50 active:scale-95 transition-all"
-                  >
-                    Verwerfen
-                  </button>
-                  <button
-                    onClick={bestaetigen}
-                    className="flex-2 flex-grow-[2] py-4 rounded-2xl bg-baeckerei-accent hover:bg-baeckerei-accent-hover text-white text-lg font-bold shadow-lg active:scale-95 transition-all"
-                  >
-                    Bestätigen ✓
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        )}
-
-        {/* ── CONFIRMED ── */}
-        {phase === 'confirmed' && (
-          <div className="w-full flex flex-col items-center gap-6 text-center">
-            <div className="w-24 h-24 rounded-full bg-green-100 flex items-center justify-center text-5xl">
-              ✅
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-baeckerei-text">Bestellung bestätigt!</h2>
-              <p className="text-baeckerei-text-secondary mt-1">{positionen.length} Position{positionen.length !== 1 ? 'en' : ''} · {formatPreis(gesamtpreis)}</p>
-            </div>
-
-            {/* Zusammenfassung */}
-            <div className="w-full bg-white rounded-2xl border border-stone-200 divide-y divide-stone-100">
-              {positionen.map((p, idx) => (
-                <div key={idx} className="flex justify-between items-center px-5 py-3">
-                  <span className="text-baeckerei-text">
-                    {p.menge}× {p.produkt_name || p.produkt}
+          {/* Produkt-Grid */}
+          <div className="flex-1 overflow-y-auto p-2">
+            <div className="grid grid-cols-3 gap-2">
+              {gefilterteProdukte.map(produkt => (
+                <button key={produkt.id} onClick={() => produktHinzufuegen(produkt)}
+                  className="bg-white rounded-xl border-2 border-stone-100 p-3 text-left
+                             hover:border-baeckerei-accent hover:shadow-sm active:bg-amber-50
+                             transition-all flex flex-col justify-between min-h-[80px]">
+                  <span className="font-medium text-baeckerei-text text-sm leading-tight">
+                    {produkt.name || produkt.produkt_name}
                   </span>
-                  <span className="font-semibold text-baeckerei-text">{formatPreis(p.preis_gesamt)}</span>
-                </div>
+                  <span className="text-baeckerei-accent font-bold text-sm mt-1">
+                    {produkt.preis ? formatPreis(produkt.preis) : '—'}
+                  </span>
+                </button>
               ))}
-              <div className="flex justify-between items-center px-5 py-3 bg-stone-50 font-bold">
-                <span>Gesamt</span>
-                <span className="text-baeckerei-accent text-lg">{formatPreis(gesamtpreis)}</span>
-              </div>
             </div>
-
-            <button
-              onClick={neueBestellung}
-              className="w-full max-w-sm py-5 rounded-2xl bg-baeckerei-accent hover:bg-baeckerei-accent-hover text-white text-xl font-bold shadow-lg active:scale-95 transition-all"
-            >
-              Neue Bestellung
-            </button>
           </div>
+        </div>
+
+        {/* ── RECHTE SEITE: BESTELLLISTE ── */}
+        <div className="w-1/2 flex flex-col overflow-hidden">
+          {/* Bestellpositionen */}
+          <div className="flex-1 overflow-y-auto p-3">
+            {positionen.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-baeckerei-text-secondary">
+                <span className="text-4xl mb-3">🛒</span>
+                <p className="text-lg font-medium">Noch keine Positionen</p>
+                <p className="text-sm mt-1">Produkte links antippen oder Spracheingabe nutzen</p>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {positionen.map((pos, idx) => (
+                  <div key={idx} className="bg-white rounded-xl border border-stone-200 p-3 flex items-center gap-3">
+                    {/* Produktname */}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-baeckerei-text text-sm truncate">{pos.produkt_name}</p>
+                      {pos.preis_pro_stueck != null && (
+                        <p className="text-xs text-baeckerei-text-secondary">{formatPreis(pos.preis_pro_stueck)}/{pos.einheit || 'Stk.'}</p>
+                      )}
+                    </div>
+                    {/* Menge */}
+                    <div className="flex items-center gap-1">
+                      <button onClick={() => aendereMenge(idx, pos.menge - 1)}
+                        className="w-8 h-8 rounded-lg bg-stone-100 hover:bg-stone-200 text-lg font-bold flex items-center justify-center">−</button>
+                      <span className="w-8 text-center font-bold text-baeckerei-text">{pos.menge}</span>
+                      <button onClick={() => aendereMenge(idx, pos.menge + 1)}
+                        className="w-8 h-8 rounded-lg bg-stone-100 hover:bg-stone-200 text-lg font-bold flex items-center justify-center">+</button>
+                    </div>
+                    {/* Preis */}
+                    <span className="font-bold text-baeckerei-text w-16 text-right text-sm">
+                      {formatPreis(pos.preis_gesamt)}
+                    </span>
+                    {/* Löschen */}
+                    <button onClick={() => entfernePosition(idx)}
+                      className="w-7 h-7 rounded-lg text-stone-300 hover:text-red-500 hover:bg-red-50 flex items-center justify-center text-sm">✕</button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Cross-Selling Popup */}
+          {crossSelling && (
+            <div className="mx-3 mb-2 bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-center gap-3 flex-shrink-0">
+              <span className="text-xl">☕</span>
+              <p className="flex-1 text-sm text-amber-800">{crossSelling.text}</p>
+              <button onClick={() => { produktHinzufuegen(crossSelling.produkt); setCrossSelling(null) }}
+                className="px-3 py-1.5 bg-baeckerei-accent text-white rounded-lg text-sm font-medium hover:bg-baeckerei-accent-hover">
+                Ja!
+              </button>
+              <button onClick={() => setCrossSelling(null)}
+                className="text-amber-400 hover:text-amber-600">✕</button>
+            </div>
+          )}
+
+          {/* ═══ KASSIEREN-BEREICH ═══ */}
+          <div className="border-t border-stone-200 bg-white p-3 flex-shrink-0">
+            {/* Gesamtpreis */}
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-lg font-bold text-baeckerei-text">Gesamt</span>
+              <span className="text-2xl font-bold text-baeckerei-accent">{formatPreis(gesamtpreis)}</span>
+            </div>
+            {/* Zahlart + Kassieren */}
+            <div className="flex gap-2">
+              <button onClick={() => setZahlart('bar')}
+                className={`flex-1 py-3 rounded-xl font-medium text-sm transition-colors
+                  ${zahlart === 'bar' ? 'bg-green-100 border-2 border-green-400 text-green-800' : 'bg-stone-50 border-2 border-stone-200 text-baeckerei-text-secondary'}`}>
+                💵 Bar
+              </button>
+              <button onClick={() => setZahlart('karte')}
+                className={`flex-1 py-3 rounded-xl font-medium text-sm transition-colors
+                  ${zahlart === 'karte' ? 'bg-blue-100 border-2 border-blue-400 text-blue-800' : 'bg-stone-50 border-2 border-stone-200 text-baeckerei-text-secondary'}`}>
+                💳 Karte
+              </button>
+              <button onClick={kassieren} disabled={positionen.length === 0}
+                className="flex-[2] py-3 rounded-xl bg-baeckerei-accent hover:bg-baeckerei-accent-hover
+                           text-white text-lg font-bold shadow-md active:scale-95 transition-all
+                           disabled:opacity-30 disabled:cursor-not-allowed">
+                Kassieren ✓
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ═══ SPRACH-LEISTE (unten) ═══ */}
+      <div className="border-t-2 border-stone-200 bg-white px-4 py-2 flex items-center gap-4 flex-shrink-0">
+        {!sprachModus && !verarbeitung && (
+          <>
+            <button onClick={starteAufnahme}
+              className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-red-500 hover:bg-red-600 text-white font-semibold shadow-md active:scale-95 transition-all">
+              <span className="text-lg">🎙️</span>
+              Spracheingabe
+            </button>
+            <p className="text-sm text-baeckerei-text-secondary">Gespräch aufnehmen – Bestellung wird automatisch erkannt</p>
+          </>
         )}
 
-      </main>
+        {sprachModus && (
+          <>
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
+              <span className="font-semibold text-red-600 text-sm">Aufnahme {formatZeit(aufnahmeZeit)}</span>
+            </div>
+            <div className="flex-1 bg-stone-50 rounded-xl px-3 py-2 text-sm text-baeckerei-text min-h-[40px] max-h-[60px] overflow-y-auto">
+              {liveText || <span className="text-baeckerei-text-secondary italic">Warte auf Sprache…</span>}
+            </div>
+            <button onClick={stoppeAufnahme}
+              className="px-5 py-3 rounded-2xl bg-baeckerei-accent hover:bg-baeckerei-accent-hover text-white font-semibold shadow-md active:scale-95 transition-all">
+              Fertig ✓
+            </button>
+          </>
+        )}
+
+        {verarbeitung && (
+          <div className="flex items-center gap-3">
+            <div className="w-6 h-6 rounded-full border-2 border-baeckerei-accent border-t-transparent animate-spin" />
+            <span className="text-sm text-baeckerei-text-secondary">Bestellung wird erkannt…</span>
+          </div>
+        )}
+      </div>
+
+      {/* ═══ STAMMKUNDE POPUP ═══ */}
+      {stammkundePopup && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setStammkundePopup(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-bold text-baeckerei-text mb-4">👤 Stammkunde auswählen</h3>
+            <p className="text-sm text-baeckerei-text-secondary mb-4">Letzte Bestellung wird automatisch geladen</p>
+            <div className="flex flex-col gap-3">
+              {STAMMKUNDEN.map(kunde => (
+                <button key={kunde.id} onClick={() => ladeStammkunde(kunde)}
+                  className="bg-stone-50 hover:bg-amber-50 border border-stone-200 hover:border-baeckerei-accent rounded-xl p-4 text-left transition-colors">
+                  <p className="font-semibold text-baeckerei-text">{kunde.name}</p>
+                  <p className="text-xs text-baeckerei-text-secondary mt-1">
+                    Letzte: {kunde.letzte.map(p => `${p.menge}× ${p.name}`).join(', ')}
+                  </p>
+                </button>
+              ))}
+            </div>
+            <button onClick={() => setStammkundePopup(false)}
+              className="w-full mt-4 py-2 text-baeckerei-text-secondary text-sm hover:text-baeckerei-text">
+              Abbrechen
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
