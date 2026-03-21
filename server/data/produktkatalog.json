@@ -446,6 +446,32 @@
       "allergene": ["G"],
       "zutaten": ["Kaffee", "Milch"],
       "kann_enthalten": []
+    },
+    {
+      "id": "apfeltasche",
+      "name": "Apfeltasche",
+      "aliase": ["Apfeltasche", "Apfel-Tasche", "Apfelstrudel"],
+      "einheit": "Stück",
+      "typ": "fertig",
+      "preis": 2.20,
+      "kategorie": "Feingebäck",
+      "allergene": ["A1"],
+      "zutaten": ["Weizenmehl", "Äpfel", "Zucker", "Zimt", "Pflanzenmargarine"],
+      "kann_enthalten": ["F"],
+      "vegan": true
+    },
+    {
+      "id": "vegane-quiche",
+      "name": "Vegane Quiche",
+      "aliase": ["Quiche", "Vegane Quiche", "Gemüsequiche"],
+      "einheit": "Stück",
+      "typ": "fertig",
+      "preis": 3.80,
+      "kategorie": "Snacks",
+      "allergene": ["A1"],
+      "zutaten": ["Weizenmehl", "Gemüse", "Tofu", "Pflanzenmargarine", "Gewürze"],
+      "kann_enthalten": ["F"],
+      "vegan": true
     }
   ],
   "rohstoffe": []

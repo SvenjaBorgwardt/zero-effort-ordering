@@ -43,6 +43,7 @@ const CROSS_SELLING_REGELN = [
   { trigger_produkt: 'cappuccino', vorschlag: 'butterhoernchen', text: 'Nur mit Kaffee wird der Tag aber zu lang!', prio: 2 },
   { trigger_produkt: 'mischbrot', vorschlag: 'leinsaatbrot', text: 'Ein Körnerbrot wäre eine gute Ergänzung!', prio: 2 },
   { trigger_produkt: 'laugenbrezel', vorschlag: 'vollkornbroetchen', text: 'Ein paar zusätzliche Ballaststoffe passen ganz gut!', prio: 3 },
+  { trigger_produkt: 'apfeltasche', vorschlag: 'vegane-quiche', text: 'Dazu eine vegane Quiche? Herzhaft trifft süß!', prio: 1 },
 ]
 
 // ============================================================
