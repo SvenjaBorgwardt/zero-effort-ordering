@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { transkribiere, erkenneSprache, speichereBestellung } from '../services/api'
+import { transkribiere, erkenneSprache, speichereKassenBestellung } from '../services/api'
 
 // Ampelfarben
 const PLAUSI_STYLE = {
@@ -26,7 +26,7 @@ function blobToBase64(blob) {
   })
 }
 
-export default function KassenApp() {
+export default function KassenApp({ mitarbeiter, onAbmelden }) {
   // State Machine: idle | recording | processing | reviewing | confirmed
   const [phase, setPhase] = useState('idle')
   const [liveText, setLiveText] = useState('')
@@ -225,12 +225,10 @@ export default function KassenApp() {
         preis_pro_stueck: p.preis_pro_stueck || null,
         preis_gesamt: p.preis_gesamt || null
       }))
-      await speichereBestellung(
-        'kasse',
-        'Kassensystem',
+      await speichereKassenBestellung(
         positionenZumSpeichern,
-        [],
-        kommentar
+        kommentar,
+        transkriptText
       )
     } catch (err) {
       // Speicherfehler still ignorieren – Bestätigung ist trotzdem angezeigt
@@ -263,14 +261,22 @@ export default function KassenApp() {
         <div className="flex items-center gap-3">
           <span className="text-2xl">🥐</span>
           <div>
-            <h1 className="text-lg font-bold text-baeckerei-text">Kassensystem</h1>
-            <p className="text-xs text-baeckerei-text-secondary">Sprach-Bestellung</p>
+            <h1 className="text-lg font-bold text-baeckerei-text">UTE Kasse</h1>
+            <p className="text-xs text-baeckerei-text-secondary">Hallo, {mitarbeiter?.name}</p>
           </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onAbmelden}
+            className="text-sm text-baeckerei-text-secondary hover:text-baeckerei-text underline"
+          >
+            Abmelden
+          </button>
         </div>
         {phase !== 'idle' && phase !== 'confirmed' && (
           <button
             onClick={neueBestellung}
-            className="text-sm text-baeckerei-text-secondary hover:text-baeckerei-text underline"
+            className="text-sm text-red-500 hover:text-red-700 font-medium"
           >
             Abbrechen
           </button>
