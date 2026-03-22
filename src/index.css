@@ -3,11 +3,40 @@
 @tailwind utilities;
 
 html {
-  font-size: 121%;
+  font-size: 100%;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 110%;
+  }
+}
+
+@media (min-width: 1024px) {
+  html {
+    font-size: 121%;
+  }
 }
 
 body {
   background-color: #F8F6FC;
   color: #1A1333;
   font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Scrollbar in Kategorie-Tabs ausblenden */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* Sicherstellen, dass Touch-Targets groß genug sind */
+@media (max-width: 767px) {
+  button {
+    min-height: 36px;
+  }
 }

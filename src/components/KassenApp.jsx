@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { Mic, MicOff, Check, X, AlertTriangle, User, ShoppingCart, Coffee, CreditCard, Banknote, Leaf, Info, Wheat, Egg, Milk, Bean, Nut, Fish, Shell, CircleAlert } from 'lucide-react'
+import { Mic, MicOff, Check, X, AlertTriangle, User, ShoppingCart, Coffee, CreditCard, Banknote, Leaf, Info, Wheat, Egg, Milk, Bean, Nut, Fish, Shell, CircleAlert, Menu } from 'lucide-react'
 import { transkribiere, erkenneSprache, speichereKassenBestellung, ladeKatalog } from '../services/api'
 import { UTELogo } from './ute-logo'
 
@@ -377,6 +377,10 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
   const besonderheitenErkanntRef = useRef(new Set())
   const allergenErkanntRef = useRef(new Set())
   const zahlartErkanntRef = useRef(false)
+
+  // Mobile UI State
+  const [mobileAnsicht, setMobileAnsicht] = useState('produkte') // 'produkte' oder 'warenkorb'
+  const [mobileMenuOffen, setMobileMenuOffen] = useState(false)
 
   // Stammkunden-Verwaltung (dynamisch erweiterbar)
   const [stammkundenListe, setStammkundenListe] = useState(STAMMKUNDEN)
@@ -823,26 +827,26 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
   // ── BESTÄTIGT SCREEN ──
   if (abgeschlossen) {
     return (
-      <div className="min-h-screen bg-baeckerei-bg flex flex-col items-center justify-center p-6">
-        <div className="w-24 h-24 rounded-full bg-green-100 flex items-center justify-center mb-6"><Check size={48} className="text-green-600" /></div>
-        <h2 className="text-3xl font-bold text-baeckerei-text mb-2">Bestellung abgeschlossen!</h2>
-        <p className="text-baeckerei-text-secondary text-lg mb-2">
+      <div className="min-h-screen bg-baeckerei-bg flex flex-col items-center justify-center p-4 sm:p-6">
+        <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-full bg-green-100 flex items-center justify-center mb-4 sm:mb-6"><Check size={32} className="text-green-600 sm:hidden" /><Check size={48} className="text-green-600 hidden sm:block" /></div>
+        <h2 className="text-2xl sm:text-3xl font-bold text-baeckerei-text mb-2 text-center">Bestellung abgeschlossen!</h2>
+        <p className="text-baeckerei-text-secondary text-base sm:text-lg mb-2 text-center">
           {positionen.length} Position{positionen.length !== 1 ? 'en' : ''} · {formatPreis(gesamtpreis)} · {zahlart === 'bar' ? 'Barzahlung' : 'Kartenzahlung'}
         </p>
-        <div className="w-full max-w-md bg-white rounded-2xl border border-violet-200 divide-y divide-violet-100 my-6">
+        <div className="w-full max-w-md bg-white rounded-2xl border border-violet-200 divide-y divide-violet-100 my-4 sm:my-6">
           {positionen.map((p, i) => (
-            <div key={i} className="flex justify-between px-5 py-3">
+            <div key={i} className="flex justify-between px-3 sm:px-5 py-2.5 sm:py-3 text-sm sm:text-base">
               <span>{p.menge}× {p.produkt_name}</span>
               <span className="font-semibold">{formatPreis(p.preis_gesamt)}</span>
             </div>
           ))}
-          <div className="flex justify-between px-5 py-3 bg-violet-50/50 font-bold text-lg">
+          <div className="flex justify-between px-3 sm:px-5 py-2.5 sm:py-3 bg-violet-50/50 font-bold text-base sm:text-lg">
             <span>Gesamt</span>
             <span className="text-baeckerei-accent">{formatPreis(gesamtpreis)}</span>
           </div>
         </div>
         <button onClick={neueBestellung}
-          className="px-8 py-4 rounded-2xl bg-baeckerei-accent hover:bg-baeckerei-accent-hover text-white text-xl font-bold shadow-lg">
+          className="px-6 sm:px-8 py-3 sm:py-4 rounded-2xl bg-baeckerei-accent hover:bg-baeckerei-accent-hover text-white text-lg sm:text-xl font-bold shadow-lg w-full max-w-xs sm:w-auto">
           Nächster Kunde
         </button>
       </div>
@@ -853,28 +857,27 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
   return (
     <div className="h-screen bg-baeckerei-bg flex flex-col overflow-hidden">
       {/* ═══ HEADER ═══ */}
-      <header className="bg-white border-b border-purple-100/60 px-5 py-2.5 flex items-center justify-between flex-shrink-0 shadow-sm">
-        <div className="flex items-center gap-3">
-          <UTELogo size={44} />
+      <header className="bg-white border-b border-purple-100/60 px-3 sm:px-5 py-2 sm:py-2.5 flex items-center justify-between flex-shrink-0 shadow-sm">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <UTELogo size={36} className="sm:hidden" />
+          <UTELogo size={44} className="hidden sm:flex" />
           <div>
-            <h1 className="text-xl font-extrabold text-baeckerei-text tracking-tight" style={{ fontFamily: "'DM Sans', sans-serif" }}>UTE</h1>
+            <h1 className="text-base sm:text-xl font-extrabold text-baeckerei-text tracking-tight" style={{ fontFamily: "'DM Sans', sans-serif" }}>UTE</h1>
             <p className="text-xs text-baeckerei-text-secondary font-medium">Hallo, {mitarbeiter?.name}</p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          {/* Allergen-Check Button */}
+        {/* Desktop: Buttons inline */}
+        <div className="hidden md:flex items-center gap-3">
           <button onClick={() => setAllergenCheck(true)}
             className="px-3 py-2 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm font-medium hover:bg-red-100">
             <AlertTriangle size={14} className="inline mr-1" /> Allergene
           </button>
-          {/* Besonderheiten-Button */}
           <button onClick={() => setBesonderheitenPopup(true)}
             className={`px-3 py-2 rounded-xl text-sm font-medium ${aktiveBesonderheiten.size > 0
               ? 'bg-green-100 border border-green-400 text-green-800'
               : 'bg-green-50 border border-green-200 text-green-700 hover:bg-green-100'}`}>
             <Leaf size={14} className="inline mr-1" /> Besonderheiten{aktiveBesonderheiten.size > 0 ? ` (${aktiveBesonderheiten.size})` : ''}
           </button>
-          {/* Stammkunde-Button */}
           <button onClick={() => setStammkundePopup(true)}
             className="px-3 py-2 rounded-xl bg-purple-50 border border-purple-200 text-purple-800 text-sm font-medium hover:bg-purple-100">
             <User size={14} className="inline mr-1" /> Stammkunde
@@ -884,7 +887,48 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
             Abmelden
           </button>
         </div>
+        {/* Mobile: Hamburger-Menü */}
+        <div className="flex md:hidden items-center gap-2">
+          {/* Warenkorb-Badge (mobile) */}
+          <button onClick={() => setMobileAnsicht(mobileAnsicht === 'warenkorb' ? 'produkte' : 'warenkorb')}
+            className="relative w-10 h-10 rounded-xl bg-violet-50 border border-violet-200 flex items-center justify-center">
+            <ShoppingCart size={18} className="text-baeckerei-accent" />
+            {positionen.length > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 bg-baeckerei-accent text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                {positionen.length}
+              </span>
+            )}
+          </button>
+          <button onClick={() => setMobileMenuOffen(!mobileMenuOffen)}
+            className="w-10 h-10 rounded-xl bg-violet-50 border border-violet-200 flex items-center justify-center">
+            <Menu size={18} className="text-baeckerei-text" />
+          </button>
+        </div>
       </header>
+
+      {/* ═══ MOBILE MENÜ DROPDOWN ═══ */}
+      {mobileMenuOffen && (
+        <div className="md:hidden bg-white border-b border-purple-100/60 px-3 py-2 flex flex-wrap gap-2 flex-shrink-0 shadow-sm">
+          <button onClick={() => { setAllergenCheck(true); setMobileMenuOffen(false) }}
+            className="flex-1 min-w-[120px] px-3 py-2.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm font-medium active:bg-red-100">
+            <AlertTriangle size={14} className="inline mr-1" /> Allergene
+          </button>
+          <button onClick={() => { setBesonderheitenPopup(true); setMobileMenuOffen(false) }}
+            className={`flex-1 min-w-[120px] px-3 py-2.5 rounded-xl text-sm font-medium ${aktiveBesonderheiten.size > 0
+              ? 'bg-green-100 border border-green-400 text-green-800'
+              : 'bg-green-50 border border-green-200 text-green-700 active:bg-green-100'}`}>
+            <Leaf size={14} className="inline mr-1" /> Besonderheiten{aktiveBesonderheiten.size > 0 ? ` (${aktiveBesonderheiten.size})` : ''}
+          </button>
+          <button onClick={() => { setStammkundePopup(true); setMobileMenuOffen(false) }}
+            className="flex-1 min-w-[120px] px-3 py-2.5 rounded-xl bg-purple-50 border border-purple-200 text-purple-800 text-sm font-medium active:bg-purple-100">
+            <User size={14} className="inline mr-1" /> Stammkunde
+          </button>
+          <button onClick={onAbmelden}
+            className="w-full py-2 text-sm text-baeckerei-text-secondary active:text-baeckerei-text text-center">
+            Abmelden
+          </button>
+        </div>
+      )}
 
       {/* ═══ FEHLER ═══ */}
       {fehler && (
@@ -894,16 +938,43 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
         </div>
       )}
 
+      {/* ═══ MOBILE TAB-NAVIGATION ═══ */}
+      <div className="md:hidden flex border-b border-purple-100/40 bg-white flex-shrink-0">
+        <button
+          onClick={() => setMobileAnsicht('produkte')}
+          className={`flex-1 py-3 text-sm font-semibold text-center transition-colors ${
+            mobileAnsicht === 'produkte'
+              ? 'text-baeckerei-accent border-b-2 border-baeckerei-accent bg-violet-50/50'
+              : 'text-baeckerei-text-secondary'
+          }`}>
+          Produkte
+        </button>
+        <button
+          onClick={() => setMobileAnsicht('warenkorb')}
+          className={`flex-1 py-3 text-sm font-semibold text-center transition-colors relative ${
+            mobileAnsicht === 'warenkorb'
+              ? 'text-baeckerei-accent border-b-2 border-baeckerei-accent bg-violet-50/50'
+              : 'text-baeckerei-text-secondary'
+          }`}>
+          Warenkorb
+          {positionen.length > 0 && (
+            <span className="ml-1.5 inline-flex items-center justify-center bg-baeckerei-accent text-white text-[10px] font-bold w-5 h-5 rounded-full">
+              {positionen.length}
+            </span>
+          )}
+        </button>
+      </div>
+
       {/* ═══ HAUPTBEREICH ═══ */}
       <div className="flex-1 flex overflow-hidden">
 
         {/* ── LINKE SEITE: PRODUKT-BUTTONS ── */}
-        <div className="w-1/2 flex flex-col border-r border-purple-100/40 overflow-hidden">
+        <div className={`w-full md:w-1/2 flex flex-col border-r border-purple-100/40 overflow-hidden ${mobileAnsicht !== 'produkte' ? 'hidden md:flex' : 'flex'}`}>
           {/* Kategorie-Tabs */}
-          <div className="flex gap-1.5 p-2.5 bg-white/60 border-b border-purple-100/40 overflow-x-auto flex-shrink-0">
+          <div className="flex gap-1 sm:gap-1.5 p-2 sm:p-2.5 bg-white/60 border-b border-purple-100/40 overflow-x-auto flex-shrink-0 scrollbar-none">
             {KATEGORIEN.map(kat => (
               <button key={kat.id} onClick={() => setAktiveKategorie(kat.id)}
-                className={`px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-colors
+                className={`px-2.5 sm:px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-colors min-h-[36px]
                   ${aktiveKategorie === kat.id
                     ? 'bg-baeckerei-accent text-white shadow-sm'
                     : 'bg-white/80 text-baeckerei-text-secondary border border-purple-100 hover:border-purple-300 hover:bg-white'
@@ -915,56 +986,56 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
 
           {/* Allergen-Ausschluss-Banner */}
           {gesperrteAllergene.size > 0 && (
-            <div className="mx-2 mt-2 bg-red-50 border border-red-200 rounded-xl p-2 flex items-center gap-2 flex-shrink-0">
-              <span className="text-sm text-red-700 font-medium whitespace-nowrap flex items-center gap-1"><AlertTriangle size={14} /> Ausschluss:</span>
+            <div className="mx-2 mt-2 bg-red-50 border border-red-200 rounded-xl p-2 flex items-start sm:items-center gap-1.5 sm:gap-2 flex-shrink-0 flex-wrap sm:flex-nowrap">
+              <span className="text-xs sm:text-sm text-red-700 font-medium whitespace-nowrap flex items-center gap-1"><AlertTriangle size={14} /> Ausschluss:</span>
               <div className="flex flex-wrap gap-1 flex-1">
                 {[...gesperrteAllergene].map(a => (
-                  <span key={a} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-xs font-medium">
-                    <AllergenIcon code={a} size={18} /> {ALLERGEN_KURZ[a]}
+                  <span key={a} className="inline-flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-[11px] sm:text-xs font-medium">
+                    <AllergenIcon code={a} size={16} /> {ALLERGEN_KURZ[a]}
                     <button onClick={() => setGesperrteAllergene(prev => {
                       const neu = new Set(prev); neu.delete(a); return neu
-                    })} className="ml-0.5 hover:text-red-900"><X size={12} /></button>
+                    })} className="ml-0.5 hover:text-red-900 w-5 h-5 flex items-center justify-center"><X size={12} /></button>
                   </span>
                 ))}
               </div>
               <button onClick={() => setGesperrteAllergene(new Set())}
-                className="text-xs text-red-400 hover:text-red-600 whitespace-nowrap">Alle aufheben</button>
+                className="text-[11px] sm:text-xs text-red-400 hover:text-red-600 whitespace-nowrap">Alle aufheben</button>
             </div>
           )}
 
           {/* Produkt-Grid */}
-          <div className="flex-1 overflow-y-auto p-3">
-            <div className="grid grid-cols-3 gap-2.5">
+          <div className="flex-1 overflow-y-auto p-2 sm:p-3">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-2.5">
               {gefilterteProdukte.map(produkt => {
                 const istGesperrt = hatGesperrtesAllergen(produkt, gesperrteAllergene)
                 return (
                   <div key={produkt.id} className="relative">
-                    <button onClick={() => produktHinzufuegen(produkt)}
-                      className={`w-full rounded-2xl border p-3.5 text-left transition-all flex flex-col justify-between h-[110px]
+                    <button onClick={() => { produktHinzufuegen(produkt); /* Auf Mobile automatisch zum Warenkorb wechseln bei erstem Produkt */ }}
+                      className={`w-full rounded-xl sm:rounded-2xl border p-2.5 sm:p-3.5 text-left transition-all flex flex-col justify-between h-[90px] sm:h-[110px]
                         ${istGesperrt
                           ? 'bg-gray-50 border-red-200 opacity-50'
                           : 'bg-white border-purple-100/60 hover:border-purple-400 hover:shadow-md active:bg-purple-50/50 shadow-sm'
                         }`}>
-                      <span className={`font-medium text-sm leading-tight pr-6 ${istGesperrt ? 'text-stone-400' : 'text-baeckerei-text'}`}>
+                      <span className={`font-medium text-xs sm:text-sm leading-tight pr-5 sm:pr-6 line-clamp-2 ${istGesperrt ? 'text-stone-400' : 'text-baeckerei-text'}`}>
                         {produkt.name || produkt.produkt_name}
                       </span>
                       {/* Bio/Vegan/Regional Tags */}
                       {(produkt.bio || produkt.vegan || produkt.regional) && (
                         <div className="flex gap-0.5 mt-0.5 flex-wrap">
-                          {produkt.bio && <span className="text-[10px] bg-green-100 text-green-700 px-1 rounded">Bio</span>}
-                          {produkt.vegan && <span className="text-[10px] bg-emerald-100 text-emerald-700 px-1 rounded">Vegan</span>}
-                          {produkt.regional && <span className="text-[10px] bg-blue-100 text-blue-700 px-1 rounded">Regional</span>}
+                          {produkt.bio && <span className="text-[9px] sm:text-[10px] bg-green-100 text-green-700 px-1 rounded">Bio</span>}
+                          {produkt.vegan && <span className="text-[9px] sm:text-[10px] bg-emerald-100 text-emerald-700 px-1 rounded">Vegan</span>}
+                          {produkt.regional && <span className="text-[9px] sm:text-[10px] bg-blue-100 text-blue-700 px-1 rounded">Regional</span>}
                         </div>
                       )}
                       <div className="flex items-center gap-1 mt-1">
-                        <span className={`font-bold text-sm ${istGesperrt ? 'text-stone-400' : 'text-baeckerei-accent'}`}>
+                        <span className={`font-bold text-xs sm:text-sm ${istGesperrt ? 'text-stone-400' : 'text-baeckerei-accent'}`}>
                           {produkt.preis ? formatPreis(produkt.preis) : '—'}
                         </span>
                         {istGesperrt && (
                           <span className="text-xs text-red-500 ml-auto font-medium"><AlertTriangle size={12} /></span>
                         )}
                         {!istGesperrt && produkt.allergene?.length > 0 && (
-                          <span className="flex items-center gap-1.5 ml-auto">
+                          <span className="hidden sm:flex items-center gap-1.5 ml-auto">
                             {uniqueAllergenIcons(produkt.allergene).slice(0, 4).map(a => <AllergenIcon key={a} code={a} size={20} farbig />)}
                           </span>
                         )}
@@ -973,9 +1044,9 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
                     {/* Allergen-Info Button */}
                     {(produkt.allergene?.length > 0 || produkt.zutaten?.length > 0) && (
                       <button onClick={(e) => { e.stopPropagation(); setAllergenInfo(produkt) }}
-                        className="absolute top-1.5 right-1.5 text-violet-400 hover:text-violet-700 transition-colors"
+                        className="absolute top-1 right-1 sm:top-1.5 sm:right-1.5 text-violet-400 hover:text-violet-700 transition-colors w-8 h-8 sm:w-auto sm:h-auto flex items-center justify-center"
                         title="Allergene & Zutaten">
-                        <Info size={20} strokeWidth={2} />
+                        <Info size={18} strokeWidth={2} />
                       </button>
                     )}
                   </div>
@@ -986,14 +1057,14 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
         </div>
 
         {/* ── RECHTE SEITE: BESTELLLISTE ── */}
-        <div className="w-1/2 flex flex-col overflow-hidden">
+        <div className={`w-full md:w-1/2 flex flex-col overflow-hidden ${mobileAnsicht !== 'warenkorb' ? 'hidden md:flex' : 'flex'}`}>
           {/* Bestellpositionen */}
-          <div className="flex-1 overflow-y-auto p-3">
+          <div className="flex-1 overflow-y-auto p-2 sm:p-3">
             {anzeigePositionen.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-baeckerei-text-secondary">
-                <ShoppingCart size={36} className="mb-3 text-baeckerei-text-secondary" />
-                <p className="text-lg font-medium">Noch keine Positionen</p>
-                <p className="text-sm mt-1">Produkte links antippen oder Spracheingabe nutzen</p>
+              <div className="h-full flex flex-col items-center justify-center text-baeckerei-text-secondary px-4">
+                <ShoppingCart size={32} className="mb-3 text-baeckerei-text-secondary" />
+                <p className="text-base sm:text-lg font-medium">Noch keine Positionen</p>
+                <p className="text-sm mt-1 text-center">Produkte antippen oder Spracheingabe nutzen</p>
               </div>
             ) : (
               <div className="flex flex-col gap-2">
@@ -1001,7 +1072,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
                   const istLive = pos.istLive === true
                   return (
                     <div key={pos.produkt_id + '-' + idx}
-                      className={`rounded-xl border p-3 flex items-center gap-3 transition-all
+                      className={`rounded-xl border p-2.5 sm:p-3 flex items-center gap-2 sm:gap-3 transition-all
                         ${istLive
                           ? 'bg-blue-50 border-blue-200 border-dashed animate-pulse'
                           : 'bg-white border-purple-100/60 shadow-sm'
@@ -1012,34 +1083,34 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
                       )}
                       {/* Produktname */}
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-baeckerei-text text-sm truncate">
+                        <p className="font-medium text-baeckerei-text text-xs sm:text-sm truncate">
                           {pos.produkt_name}
-                          {istLive && <span className="text-blue-500 text-xs ml-2">live erkannt</span>}
+                          {istLive && <span className="text-blue-500 text-xs ml-1 sm:ml-2">live</span>}
                         </p>
                         {pos.preis_pro_stueck != null && (
-                          <p className="text-xs text-baeckerei-text-secondary">{formatPreis(pos.preis_pro_stueck)}/{pos.einheit || 'Stk.'}</p>
+                          <p className="text-[11px] sm:text-xs text-baeckerei-text-secondary">{formatPreis(pos.preis_pro_stueck)}/{pos.einheit || 'Stk.'}</p>
                         )}
                       </div>
                       {/* Menge */}
                       <div className="flex items-center gap-1">
                         {!istLive && (
                           <button onClick={() => aendereMenge(idx, pos.menge - 1)}
-                            className="w-8 h-8 rounded-lg bg-violet-50 hover:bg-violet-100 text-lg font-bold flex items-center justify-center">−</button>
+                            className="w-9 h-9 sm:w-8 sm:h-8 rounded-lg bg-violet-50 hover:bg-violet-100 active:bg-violet-200 text-lg font-bold flex items-center justify-center">−</button>
                         )}
-                        <span className="w-8 text-center font-bold text-baeckerei-text">{pos.menge}</span>
+                        <span className="w-7 sm:w-8 text-center font-bold text-baeckerei-text text-sm">{pos.menge}</span>
                         {!istLive && (
                           <button onClick={() => aendereMenge(idx, pos.menge + 1)}
-                            className="w-8 h-8 rounded-lg bg-violet-50 hover:bg-violet-100 text-lg font-bold flex items-center justify-center">+</button>
+                            className="w-9 h-9 sm:w-8 sm:h-8 rounded-lg bg-violet-50 hover:bg-violet-100 active:bg-violet-200 text-lg font-bold flex items-center justify-center">+</button>
                         )}
                       </div>
                       {/* Preis */}
-                      <span className="font-bold text-baeckerei-text w-16 text-right text-sm">
+                      <span className="font-bold text-baeckerei-text w-14 sm:w-16 text-right text-xs sm:text-sm">
                         {formatPreis(pos.preis_gesamt)}
                       </span>
                       {/* Löschen */}
                       {!istLive && (
                         <button onClick={() => entfernePosition(idx)}
-                          className="w-7 h-7 rounded-lg text-stone-300 hover:text-red-500 hover:bg-red-50 flex items-center justify-center"><X size={14} /></button>
+                          className="w-9 h-9 sm:w-7 sm:h-7 rounded-lg text-stone-300 hover:text-red-500 hover:bg-red-50 active:bg-red-100 flex items-center justify-center flex-shrink-0"><X size={16} /></button>
                       )}
                     </div>
                   )
@@ -1050,42 +1121,42 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
 
           {/* Cross-Selling Popup */}
           {crossSelling && (
-            <div className="mx-3 mb-2 bg-purple-50 border border-purple-200 rounded-xl p-3 flex items-center gap-3 flex-shrink-0">
-              <Coffee size={20} className="text-purple-600 flex-shrink-0" />
-              <p className="flex-1 text-sm text-purple-800">{crossSelling.text}</p>
+            <div className="mx-2 sm:mx-3 mb-2 bg-purple-50 border border-purple-200 rounded-xl p-2.5 sm:p-3 flex items-center gap-2 sm:gap-3 flex-shrink-0">
+              <Coffee size={18} className="text-purple-600 flex-shrink-0" />
+              <p className="flex-1 text-xs sm:text-sm text-purple-800">{crossSelling.text}</p>
               <button onClick={() => { produktHinzufuegen(crossSelling.produkt); setCrossSelling(null) }}
-                className="px-3 py-1.5 bg-baeckerei-accent text-white rounded-lg text-sm font-medium hover:bg-baeckerei-accent-hover">
+                className="px-2.5 sm:px-3 py-1.5 bg-baeckerei-accent text-white rounded-lg text-xs sm:text-sm font-medium hover:bg-baeckerei-accent-hover active:bg-baeckerei-accent-hover flex-shrink-0">
                 Ja!
               </button>
               <button onClick={() => setCrossSelling(null)}
-                className="text-purple-300 hover:text-purple-500"><X size={16} /></button>
+                className="text-purple-300 hover:text-purple-500 w-8 h-8 flex items-center justify-center flex-shrink-0"><X size={16} /></button>
             </div>
           )}
 
           {/* ═══ KASSIEREN-BEREICH ═══ */}
-          <div className="border-t border-purple-100/40 bg-white p-4 flex-shrink-0">
+          <div className="border-t border-purple-100/40 bg-white p-3 sm:p-4 flex-shrink-0">
             {/* Gesamtpreis */}
-            <div className="flex justify-between items-center mb-3">
-              <span className="text-xl font-bold text-baeckerei-text">Gesamt</span>
-              <span className="text-3xl font-extrabold text-baeckerei-accent tracking-tight">{formatPreis(gesamtpreis)}</span>
+            <div className="flex justify-between items-center mb-2 sm:mb-3">
+              <span className="text-base sm:text-xl font-bold text-baeckerei-text">Gesamt</span>
+              <span className="text-2xl sm:text-3xl font-extrabold text-baeckerei-accent tracking-tight">{formatPreis(gesamtpreis)}</span>
             </div>
             {/* Zahlart + Kassieren */}
-            <div className="flex gap-2.5">
+            <div className="flex gap-1.5 sm:gap-2.5">
               <button onClick={() => setZahlart('bar')}
-                className={`flex-1 py-3 rounded-2xl font-medium text-sm transition-all
+                className={`flex-1 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl font-medium text-xs sm:text-sm transition-all
                   ${zahlart === 'bar' ? 'bg-emerald-50 border-2 border-emerald-500 text-emerald-700 font-semibold shadow-sm' : 'bg-white border-2 border-purple-100 text-baeckerei-text-secondary hover:border-purple-300'}`}>
-                <Banknote size={16} className="inline mr-1" /> Bar
+                <Banknote size={14} className="inline mr-0.5 sm:mr-1" /> Bar
               </button>
               <button onClick={() => setZahlart('karte')}
-                className={`flex-1 py-3 rounded-2xl font-medium text-sm transition-all
+                className={`flex-1 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl font-medium text-xs sm:text-sm transition-all
                   ${zahlart === 'karte' ? 'bg-blue-50 border-2 border-blue-500 text-blue-700 font-semibold shadow-sm' : 'bg-white border-2 border-purple-100 text-baeckerei-text-secondary hover:border-purple-300'}`}>
-                <CreditCard size={16} className="inline mr-1" /> Karte
+                <CreditCard size={14} className="inline mr-0.5 sm:mr-1" /> Karte
               </button>
               <button onClick={kassieren} disabled={positionen.length === 0}
-                className="flex-[2] py-3.5 rounded-2xl text-white text-lg font-bold shadow-lg active:scale-[0.98] transition-all
+                className="flex-[2] py-2.5 sm:py-3.5 rounded-xl sm:rounded-2xl text-white text-base sm:text-lg font-bold shadow-lg active:scale-[0.98] transition-all
                            disabled:opacity-25 disabled:cursor-not-allowed"
                 style={{ background: positionen.length > 0 ? 'linear-gradient(135deg, #7C3AED 0%, #5B21B6 50%, #4C1D95 100%)' : '#9CA3AF' }}>
-                <Check size={18} className="inline mr-1" /> Kassieren
+                <Check size={16} className="inline mr-0.5 sm:mr-1" /> Kassieren
               </button>
             </div>
           </div>
@@ -1093,25 +1164,27 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
       </div>
 
       {/* ═══ SPRACH-LEISTE (unten) ═══ */}
-      <div className="border-t border-purple-100/40 bg-white px-5 py-3 flex items-center gap-4 flex-shrink-0 shadow-[0_-2px_10px_rgba(124,58,237,0.06)]">
+      <div className="border-t border-purple-100/40 bg-white px-3 sm:px-5 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-4 flex-shrink-0 shadow-[0_-2px_10px_rgba(124,58,237,0.06)]">
         {!sprachModus && !verarbeitung && (
           <>
             <button onClick={starteAufnahme}
-              className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-red-500 hover:bg-red-600 text-white font-semibold shadow-md active:scale-95 transition-all">
+              className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl bg-red-500 hover:bg-red-600 active:bg-red-700 text-white font-semibold shadow-md active:scale-95 transition-all text-sm sm:text-base flex-shrink-0">
               <Mic size={18} />
-              Spracheingabe
+              <span className="hidden sm:inline">Spracheingabe</span>
+              <span className="sm:hidden">Sprache</span>
             </button>
-            <p className="text-sm text-baeckerei-text-secondary">Gespräch aufnehmen – Bestellung wird automatisch erkannt</p>
+            <p className="text-xs sm:text-sm text-baeckerei-text-secondary hidden sm:block">Gespräch aufnehmen – Bestellung wird automatisch erkannt</p>
+            <p className="text-xs text-baeckerei-text-secondary sm:hidden">Bestellung per Sprache aufnehmen</p>
           </>
         )}
 
         {sprachModus && (
           <>
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
-              <span className="font-semibold text-red-600 text-sm">Aufnahme {formatZeit(aufnahmeZeit)}</span>
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+              <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-red-500 animate-pulse" />
+              <span className="font-semibold text-red-600 text-xs sm:text-sm">{formatZeit(aufnahmeZeit)}</span>
             </div>
-            <div className="flex-1 bg-violet-50/50 rounded-xl px-3 py-2 text-sm text-baeckerei-text min-h-[40px] max-h-[60px] overflow-y-auto">
+            <div className="flex-1 bg-violet-50/50 rounded-xl px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-baeckerei-text min-h-[36px] sm:min-h-[40px] max-h-[50px] sm:max-h-[60px] overflow-y-auto min-w-0">
               {liveText || <span className="text-baeckerei-text-secondary italic">Warte auf Sprache…</span>}
               {/* Auto-erkannte Features anzeigen */}
               {(aktiveBesonderheiten.size > 0 || erkannterStammkunde) && (
@@ -1134,24 +1207,24 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
               )}
             </div>
             <button onClick={stoppeAufnahme}
-              className="px-5 py-3 rounded-2xl bg-baeckerei-accent hover:bg-baeckerei-accent-hover text-white font-semibold shadow-md active:scale-95 transition-all">
-              <Check size={16} className="inline mr-1" /> Fertig
+              className="px-3 sm:px-5 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl bg-baeckerei-accent hover:bg-baeckerei-accent-hover text-white font-semibold shadow-md active:scale-95 transition-all text-sm sm:text-base flex-shrink-0">
+              <Check size={14} className="inline mr-0.5 sm:mr-1" /> Fertig
             </button>
           </>
         )}
 
         {verarbeitung && (
-          <div className="flex items-center gap-3">
-            <div className="w-6 h-6 rounded-full border-2 border-baeckerei-accent border-t-transparent animate-spin" />
-            <span className="text-sm text-baeckerei-text-secondary">Bestellung wird erkannt…</span>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 border-baeckerei-accent border-t-transparent animate-spin" />
+            <span className="text-xs sm:text-sm text-baeckerei-text-secondary">Bestellung wird erkannt…</span>
           </div>
         )}
       </div>
 
       {/* ═══ STAMMKUNDE POPUP ═══ */}
       {stammkundePopup && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setStammkundePopup(false)}>
-          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-50" onClick={() => setStammkundePopup(false)}>
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl p-4 sm:p-6 w-full sm:max-w-md max-h-[85vh] sm:max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <h3 className="text-lg font-bold text-baeckerei-text mb-4 flex items-center gap-2"><User size={20} /> Stammkunde auswählen</h3>
             <p className="text-sm text-baeckerei-text-secondary mb-4">Letzte Bestellung wird automatisch geladen</p>
             <div className="flex flex-col gap-3">
@@ -1183,8 +1256,8 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
 
       {/* ═══ NEUER STAMMKUNDE POPUP ═══ */}
       {neuerStammkundePopup && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setNeuerStammkundePopup(false)}>
-          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-50" onClick={() => setNeuerStammkundePopup(false)}>
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl p-4 sm:p-6 w-full sm:max-w-md" onClick={e => e.stopPropagation()}>
             <h3 className="text-lg font-bold text-baeckerei-text mb-4 flex items-center gap-2"><User size={20} /> Neuen Stammkunden anlegen</h3>
             {positionen.length > 0 ? (
               <p className="text-sm text-green-600 mb-4 flex items-center gap-1"><Check size={14} /> Aktuelle Bestellung ({positionen.length} Positionen) wird als "wie immer" gespeichert</p>
@@ -1222,8 +1295,8 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
 
       {/* ═══ ALLERGEN-INFO POPUP (einzelnes Produkt) ═══ */}
       {allergenInfo && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setAllergenInfo(null)}>
-          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-50" onClick={() => setAllergenInfo(null)}>
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl p-4 sm:p-6 w-full sm:max-w-md max-h-[85vh] sm:max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-start justify-between mb-4">
               <div>
                 <h3 className="text-lg font-bold text-baeckerei-text">{allergenInfo.name || allergenInfo.produkt_name}</h3>
@@ -1284,8 +1357,8 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
 
       {/* ═══ ALLERGEN-CHECK POPUP (gesamte Bestellung) ═══ */}
       {allergenCheck && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setAllergenCheck(false)}>
-          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-50" onClick={() => setAllergenCheck(false)}>
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl p-4 sm:p-6 w-full sm:max-w-lg max-h-[90vh] sm:max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-start justify-between mb-4">
               <div>
                 <h3 className="text-lg font-bold text-baeckerei-text flex items-center gap-2"><AlertTriangle size={20} className="text-red-600" /> Allergen-Check</h3>
@@ -1426,8 +1499,8 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
 
       {/* ═══ ALLERGEN-WARNUNG POPUP (gesperrtes Produkt angeklickt) ═══ */}
       {allergenWarnung && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setAllergenWarnung(null)}>
-          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50" onClick={() => setAllergenWarnung(null)}>
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl p-4 sm:p-6 w-full sm:max-w-sm" onClick={e => e.stopPropagation()}>
             <div className="text-center mb-4">
               <AlertTriangle size={48} className="mx-auto mb-3 text-red-500" />
               <h3 className="text-lg font-bold text-red-700">Allergen-Warnung!</h3>
@@ -1464,8 +1537,8 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
 
       {/* ═══ STAMMKUNDE ERKANNT POPUP (per Sprache) ═══ */}
       {erkannterStammkunde && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setErkannterStammkunde(null)}>
-          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-50" onClick={() => setErkannterStammkunde(null)}>
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl p-4 sm:p-6 w-full sm:max-w-sm" onClick={e => e.stopPropagation()}>
             <div className="text-center mb-4">
               <User size={48} className="mx-auto mb-3 text-baeckerei-accent" />
               <h3 className="text-lg font-bold text-baeckerei-text">Stammkunde erkannt!</h3>
@@ -1498,8 +1571,8 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
 
       {/* ═══ BESONDERHEITEN POPUP ═══ */}
       {besonderheitenPopup && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setBesonderheitenPopup(false)}>
-          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-50" onClick={() => setBesonderheitenPopup(false)}>
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl p-4 sm:p-6 w-full sm:max-w-sm" onClick={e => e.stopPropagation()}>
             <h3 className="text-lg font-bold text-baeckerei-text mb-2 flex items-center gap-2"><Leaf size={20} className="text-green-600" /> Besonderheiten</h3>
             <p className="text-sm text-baeckerei-text-secondary mb-4">Nur Produkte mit diesen Eigenschaften anzeigen:</p>
             <div className="flex flex-col gap-3">
