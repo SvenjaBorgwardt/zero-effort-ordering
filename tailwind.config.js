@@ -8,12 +8,12 @@ export default {
     extend: {
       colors: {
         'baeckerei': {
-          'bg': '#FFF8F0',
+          'bg': '#F0EDFA',
           'card': '#FFFFFF',
-          'accent': '#D97706',
-          'accent-hover': '#B45309',
-          'text': '#292524',
-          'text-secondary': '#78716C',
+          'accent': '#6D28D9',
+          'accent-hover': '#5B21B6',
+          'text': '#1E1B2E',
+          'text-secondary': '#6B6880',
           'gruen': '#16A34A',
           'gelb': '#EAB308',
           'rot': '#DC2626',
