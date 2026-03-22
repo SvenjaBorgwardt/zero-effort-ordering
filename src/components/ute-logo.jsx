@@ -20,13 +20,13 @@ export function UTELogo({ size = 40, showText = false, className = '' }) {
   )
 }
 
-// Größere Version für Login-Screen
+// Größere Version für Login-Screen – lesbar aus der letzten Reihe
 export function UTELogoLarge({ className = '' }) {
   return (
     <div className={`flex flex-col items-center ${className}`}>
-      <UTELogo size={160} />
-      <h2 className="text-3xl font-bold tracking-tight mt-2" style={{ color: '#1E1B2E' }}>UTE</h2>
-      <p className="text-sm opacity-60" style={{ color: '#1E1B2E' }}>Unkomplizierte Theken Eingabe</p>
+      <UTELogo size={280} />
+      <h2 className="text-7xl font-extrabold tracking-tight mt-4" style={{ color: '#1E1B2E' }}>UTE</h2>
+      <p className="text-2xl font-medium mt-1" style={{ color: '#6B6880' }}>Unkomplizierte Theken Eingabe</p>
     </div>
   )
 }

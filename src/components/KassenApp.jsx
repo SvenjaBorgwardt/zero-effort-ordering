@@ -961,8 +961,8 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
                           <span className="text-xs text-red-500 ml-auto font-medium"><AlertTriangle size={12} /></span>
                         )}
                         {!istGesperrt && produkt.allergene?.length > 0 && (
-                          <span className="flex items-center gap-0.5 text-stone-400 ml-auto">
-                            {produkt.allergene.slice(0, 3).map(a => <AllergenIcon key={a} code={a} size={14} />)}
+                          <span className="flex items-center gap-0.5 text-violet-500 ml-auto">
+                            {produkt.allergene.slice(0, 3).map(a => <AllergenIcon key={a} code={a} size={16} />)}
                           </span>
                         )}
                       </div>
@@ -970,7 +970,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
                     {/* Allergen-Info Button */}
                     {(produkt.allergene?.length > 0 || produkt.zutaten?.length > 0) && (
                       <button onClick={(e) => { e.stopPropagation(); setAllergenInfo(produkt) }}
-                        className="absolute top-1.5 right-1.5 text-violet-300 hover:text-violet-600 transition-colors"
+                        className="absolute top-1.5 right-1.5 text-violet-400 hover:text-violet-700 transition-colors"
                         title="Allergene & Zutaten">
                         <Info size={20} strokeWidth={2} />
                       </button>
@@ -1070,18 +1070,18 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
             <div className="flex gap-2">
               <button onClick={() => setZahlart('bar')}
                 className={`flex-1 py-3 rounded-xl font-medium text-sm transition-colors
-                  ${zahlart === 'bar' ? 'bg-green-100 border-2 border-green-400 text-green-800' : 'bg-violet-50/50 border-2 border-violet-200 text-baeckerei-text-secondary'}`}>
+                  ${zahlart === 'bar' ? 'bg-green-50 border-2 border-green-500 text-green-700 font-semibold' : 'bg-white border-2 border-violet-200 text-baeckerei-text-secondary hover:border-violet-400'}`}>
                 <Banknote size={16} className="inline mr-1" /> Bar
               </button>
               <button onClick={() => setZahlart('karte')}
                 className={`flex-1 py-3 rounded-xl font-medium text-sm transition-colors
-                  ${zahlart === 'karte' ? 'bg-blue-100 border-2 border-blue-400 text-blue-800' : 'bg-violet-50/50 border-2 border-violet-200 text-baeckerei-text-secondary'}`}>
+                  ${zahlart === 'karte' ? 'bg-blue-50 border-2 border-blue-500 text-blue-700 font-semibold' : 'bg-white border-2 border-violet-200 text-baeckerei-text-secondary hover:border-violet-400'}`}>
                 <CreditCard size={16} className="inline mr-1" /> Karte
               </button>
               <button onClick={kassieren} disabled={positionen.length === 0}
-                className="flex-[2] py-3 rounded-xl bg-baeckerei-accent hover:bg-baeckerei-accent-hover
-                           text-white text-lg font-bold shadow-md active:scale-95 transition-all
-                           disabled:opacity-30 disabled:cursor-not-allowed">
+                className="flex-[2] py-3 rounded-xl text-white text-lg font-bold shadow-lg active:scale-95 transition-all
+                           disabled:opacity-30 disabled:cursor-not-allowed"
+                style={{ background: positionen.length > 0 ? 'linear-gradient(135deg, #6D28D9, #4C1D95)' : '#6D28D9' }}>
                 <Check size={18} className="inline mr-1" /> Kassieren
               </button>
             </div>
@@ -1114,7 +1114,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
               {(aktiveBesonderheiten.size > 0 || erkannterStammkunde) && (
                 <div className="flex gap-1 mt-1 flex-wrap">
                   {erkannterStammkunde && (
-                    <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-medium">
+                    <span className="text-[10px] bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded-full font-medium">
                       {erkannterStammkunde.name}
                     </span>
                   )}
@@ -1209,7 +1209,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
               </button>
               <button onClick={stammkundeAnlegen}
                 disabled={!neuerStammkundeName.trim() || positionen.length === 0}
-                className="flex-1 py-2 bg-baeckerei-accent text-white font-semibold rounded-lg hover:bg-amber-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                className="flex-1 py-2 bg-baeckerei-accent text-white font-semibold rounded-lg hover:bg-baeckerei-accent-hover disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
                 Speichern
               </button>
             </div>
