@@ -63,7 +63,7 @@ const ALLERGEN_ICON_MAP = {
 
 // Farben pro Allergen-Typ für farbige Icons
 const ALLERGEN_FARBE = {
-  'A': '#B45309', 'A1': '#B45309', 'A2': '#B45309', 'A3': '#B45309', // Getreide = warm braun
+  'A': '#B45309', 'A1': '#D97706', 'A2': '#78716C', 'A3': '#15803D', // Getreide: A=braun, A1/Weizen=amber, A2/Roggen=grau, A3/Dinkel=grün
   'B': '#DC2626', 'N': '#DC2626',  // Krebstiere/Weichtiere = rot
   'C': '#D97706',                    // Ei = amber
   'D': '#2563EB',                    // Fisch = blau
