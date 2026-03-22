@@ -1176,9 +1176,9 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
         {!sprachModus && !verarbeitung && (
           <>
             <button onClick={starteAufnahme}
-              className="flex items-center gap-2 px-4 sm:px-5 py-3.5 sm:py-3 rounded-2xl bg-red-500 hover:bg-red-600 active:bg-red-700 text-white font-bold sm:font-semibold shadow-lg sm:shadow-md active:scale-95 transition-all text-base sm:text-base flex-shrink-0">
+              className="flex items-center gap-2 px-4 md:px-6 py-3.5 md:py-4 rounded-2xl bg-red-500 hover:bg-red-600 active:bg-red-700 text-white font-bold sm:font-semibold shadow-lg sm:shadow-md active:scale-95 transition-all text-base md:text-lg flex-shrink-0">
               <Mic size={20} className="md:hidden" />
-              <Mic size={18} className="hidden md:block" />
+              <Mic size={22} className="hidden md:block" />
               <span className="hidden sm:inline">Spracheingabe</span>
               <span className="sm:hidden">Spracheingabe</span>
             </button>
