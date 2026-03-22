@@ -73,6 +73,11 @@ export default function TeamSeite({ onZurueck }) {
             Unser Team
           </h2>
 
+          {/* Slogan */}
+          <p className="text-sm sm:text-base text-purple-600 text-center -mt-2 italic">
+            Wir freuen uns, wenn UTE bald auch deine Bäckerei als Teammitglied unterstützt.
+          </p>
+
           {/* Team-Mitglieder */}
           <div className="w-full grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
             {TEAM.map((person, i) => (
