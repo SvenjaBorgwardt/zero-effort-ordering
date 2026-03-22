@@ -3,10 +3,10 @@ import { ArrowLeft, Linkedin, Cpu, Database, Search, Shield, ChevronDown, Zap, M
 
 // ── Team-Mitglieder (v.l.n.r. wie auf dem Foto) ──
 const TEAM = [
-  { name: 'Viktoria', rolle: 'Frontend & UX Design', linkedin: 'https://www.linkedin.com/in/vikt%C3%B3ria-utters-b57310b2' },
-  { name: 'Rebecca', rolle: 'Backend & Datenbank', linkedin: 'https://www.linkedin.com/in/rebecca-thinnes-ba1304389/' },
-  { name: 'Svenja', rolle: 'KI & Spracherkennung', linkedin: 'https://www.linkedin.com/in/svenja-borgwardt-5581b03b4/' },
-  { name: 'Stefanie', rolle: 'Projektleitung & Testing', linkedin: 'https://www.linkedin.com/in/stefanie-pfeiffer-a793293b9' },
+  { name: 'Viktoria', rolle: 'Frontend & UX Design', linkedin: 'https://www.linkedin.com/in/vikt%C3%B3ria-utters-b57310b2', bild: '/Viktoria.png' },
+  { name: 'Rebecca', rolle: 'Backend & Datenbank', linkedin: 'https://www.linkedin.com/in/rebecca-thinnes-ba1304389/', bild: '/Rebecca.png' },
+  { name: 'Svenja', rolle: 'KI & Spracherkennung', linkedin: 'https://www.linkedin.com/in/svenja-borgwardt-5581b03b4/', bild: '/Svenja.png' },
+  { name: 'Stefanie', rolle: 'Projektleitung & Testing', linkedin: 'https://www.linkedin.com/in/stefanie-pfeiffer-a793293b9', bild: '/Stefanie.png' },
 ]
 
 // ── Pipeline-Schritt Komponente ──
@@ -70,14 +70,9 @@ export default function TeamSeite({ onZurueck }) {
           </div>
 
           {/* Überschrift */}
-          <div className="text-center">
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-purple-900" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-              Unser Team
-            </h2>
-            <p className="text-sm sm:text-base text-purple-600 mt-1">
-              Unkomplizierte Theken-Eingabe — von Schülerinnen für Bäckereien
-            </p>
-          </div>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-purple-900 text-center" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+            Unser Team
+          </h2>
 
           {/* Team-Mitglieder */}
           <div className="w-full grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
@@ -90,8 +85,17 @@ export default function TeamSeite({ onZurueck }) {
                 className="flex flex-col items-center gap-1.5 p-3 sm:p-4 rounded-2xl bg-white/40 border border-purple-200/50 backdrop-blur-sm hover:bg-white/60 hover:border-purple-300 hover:shadow-md active:scale-95 transition-all cursor-pointer no-underline"
                 style={{ animationDelay: `${i * 100}ms`, animation: 'fadeIn 0.5s ease-out both' }}
               >
-                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-purple-300 to-violet-400 flex items-center justify-center shadow-md">
-                  <span className="text-white font-bold text-lg sm:text-xl">{person.name[0]}</span>
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-purple-300 to-violet-400 flex items-center justify-center shadow-md overflow-hidden">
+                  <img
+                    src={person.bild}
+                    alt={person.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.style.display = 'none'
+                      e.target.nextSibling.style.display = 'flex'
+                    }}
+                  />
+                  <span className="text-white font-bold text-lg sm:text-xl hidden items-center justify-center w-full h-full">{person.name[0]}</span>
                 </div>
                 <span className="font-bold text-purple-900 text-sm sm:text-base flex items-center gap-1">
                   {person.name}
@@ -262,7 +266,7 @@ export default function TeamSeite({ onZurueck }) {
             <h3 className="text-base sm:text-lg font-bold text-purple-900">Probier UTE selbst aus!</h3>
             <div className="flex flex-col items-center gap-2">
               <img
-                src="/QR-code-UTE.png"
+                src="/QR-Code-UTE.png"
                 alt="QR-Code zum Projekt"
                 className="rounded-2xl shadow-lg border-2 border-purple-200"
                 style={{ width: 180, height: 180, objectFit: 'contain' }}
