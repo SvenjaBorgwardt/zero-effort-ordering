@@ -24,15 +24,13 @@ export function UTELogo({ size = 40, showText = false, className = '' }) {
 export function UTELogoLarge({ className = '' }) {
   return (
     <div className={`relative flex flex-col items-center ${className}`}>
-      {/* Croissant als großes Hintergrund-Element */}
+      {/* Croissant als großes Hintergrund-Element – responsive skaliert */}
       <img
         src="/ute-logo.png"
         alt=""
         aria-hidden="true"
-        className="absolute pointer-events-none select-none"
+        className="absolute pointer-events-none select-none w-[220px] h-[220px] sm:w-[320px] sm:h-[320px] md:w-[420px] md:h-[420px]"
         style={{
-          width: 420,
-          height: 420,
           objectFit: 'contain',
           opacity: 0.08,
           top: '50%',
@@ -40,9 +38,9 @@ export function UTELogoLarge({ className = '' }) {
           transform: 'translate(-50%, -50%)',
         }}
       />
-      {/* Text im Vordergrund */}
-      <h2 className="text-7xl font-extrabold tracking-tight relative" style={{ color: '#1A1333' }}>UTE</h2>
-      <p className="text-2xl font-medium mt-1 relative" style={{ color: '#6E6589' }}>Unkomplizierte Theken Eingabe</p>
+      {/* Text im Vordergrund – responsive Schriftgrößen */}
+      <h2 className="text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tight relative" style={{ color: '#1A1333' }}>UTE</h2>
+      <p className="text-lg sm:text-xl md:text-2xl font-medium mt-1 relative" style={{ color: '#6E6589' }}>Unkomplizierte Theken Eingabe</p>
     </div>
   )
 }

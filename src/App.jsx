@@ -35,24 +35,24 @@ function App() {
   // === STARTBILDSCHIRM: Mitarbeiter-Auswahl ===
   if (!mitarbeiter) {
     return (
-      <div className="min-h-screen bg-baeckerei-bg flex flex-col items-center justify-center p-6">
-        <div className="text-center mb-10">
+      <div className="min-h-screen bg-baeckerei-bg flex flex-col items-center justify-center p-4 sm:p-6">
+        <div className="text-center mb-6 sm:mb-10">
           <UTELogoLarge />
         </div>
 
-        <p className="text-baeckerei-text-secondary mb-6 text-sm">Wer arbeitet heute an der Theke?</p>
+        <p className="text-baeckerei-text-secondary mb-4 sm:mb-6 text-sm">Wer arbeitet heute an der Theke?</p>
 
-        <div className="grid grid-cols-2 gap-4 w-full max-w-sm">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 w-full max-w-sm">
           {MITARBEITER.map(ma => (
             <button
               key={ma.id}
               onClick={() => handleAuswahl(ma)}
-              className="bg-white rounded-2xl shadow-sm border-2 border-stone-100 p-6 text-center
+              className="bg-white rounded-2xl shadow-sm border-2 border-stone-100 p-4 sm:p-6 text-center
                          hover:shadow-md hover:border-baeckerei-accent active:bg-amber-50
-                         transition-all flex flex-col items-center gap-2"
+                         transition-all flex flex-col items-center gap-1.5 sm:gap-2 min-h-[88px]"
             >
-              <div className="w-12 h-12 rounded-full bg-baeckerei-accent/20 flex items-center justify-center text-baeckerei-accent font-bold text-lg">{ma.name.charAt(0)}</div>
-              <span className="font-semibold text-baeckerei-text text-lg">{ma.name}</span>
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-baeckerei-accent/20 flex items-center justify-center text-baeckerei-accent font-bold text-base sm:text-lg">{ma.name.charAt(0)}</div>
+              <span className="font-semibold text-baeckerei-text text-base sm:text-lg">{ma.name}</span>
               <span className="text-xs text-baeckerei-text-secondary">{ma.rolle}</span>
             </button>
           ))}
