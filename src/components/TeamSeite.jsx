@@ -3,10 +3,10 @@ import { ArrowLeft, Linkedin, Cpu, Database, Search, Shield, ChevronDown, Zap, M
 
 // ── Team-Mitglieder (v.l.n.r. wie auf dem Foto) ──
 const TEAM = [
-  { name: 'Viktoria', rolle: 'Frontend & UX Design', linkedin: 'https://www.linkedin.com/in/vikt%C3%B3ria-utters-b57310b2', bild: '/Viktoria.png' },
-  { name: 'Rebecca', rolle: 'Backend & Datenbank', linkedin: 'https://www.linkedin.com/in/rebecca-thinnes-ba1304389/', bild: '/Rebecca.png' },
-  { name: 'Svenja', rolle: 'KI & Spracherkennung', linkedin: 'https://www.linkedin.com/in/svenja-borgwardt-5581b03b4/', bild: '/Svenja.png' },
-  { name: 'Stefanie', rolle: 'Projektleitung & Testing', linkedin: 'https://www.linkedin.com/in/stefanie-pfeiffer-a793293b9', bild: '/Stefanie.png' },
+  { name: 'Viktoria', rolle: 'Frontend & UX Design', linkedin: 'https://www.linkedin.com/in/vikt%C3%B3ria-utters-b57310b2', bild: '/Viktoria.webp' },
+  { name: 'Rebecca', rolle: 'Backend & Datenbank', linkedin: 'https://www.linkedin.com/in/rebecca-thinnes-ba1304389/', bild: '/Rebecca.webp' },
+  { name: 'Svenja', rolle: 'KI & Spracherkennung', linkedin: 'https://www.linkedin.com/in/svenja-borgwardt-5581b03b4/', bild: '/Svenja.webp' },
+  { name: 'Stefanie', rolle: 'Projektleitung & Testing', linkedin: 'https://www.linkedin.com/in/stefanie-pfeiffer-a793293b9', bild: '/Stefanie.webp' },
 ]
 
 // ── Pipeline-Schritt Komponente ──
@@ -59,15 +59,14 @@ export default function TeamSeite({ onZurueck }) {
 
           {/* ════════ TEAM-BEREICH ════════ */}
 
-          {/* Teamfoto */}
-          <div className="w-full rounded-2xl overflow-hidden shadow-xl border-2 border-purple-200">
-            <img
-              src="/UTE-team.png"
-              alt="Team UTE"
-              className="w-full h-auto object-cover"
-              onError={(e) => { e.target.style.display = 'none' }}
-            />
-          </div>
+          {/* Teamfoto (lazy load) */}
+          <img
+            src="/UTE-team.webp"
+            alt="Team UTE"
+            loading="lazy"
+            className={`w-full h-auto object-cover rounded-2xl transition-all duration-700 ease-out ${geladen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+            onError={(e) => { e.target.style.display = 'none' }}
+          />
 
           {/* Überschrift */}
           <h2 className="text-2xl sm:text-3xl font-extrabold text-purple-900 text-center" style={{ fontFamily: "'DM Sans', sans-serif" }}>
@@ -82,13 +81,14 @@ export default function TeamSeite({ onZurueck }) {
                 href={person.linkedin}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex flex-col items-center gap-1.5 p-3 sm:p-4 rounded-2xl bg-white/40 border border-purple-200/50 backdrop-blur-sm hover:bg-white/60 hover:border-purple-300 hover:shadow-md active:scale-95 transition-all cursor-pointer no-underline"
+                className="flex flex-col items-center gap-1.5 p-3 sm:p-4 rounded-2xl border border-purple-200/50 hover:bg-white/60 hover:border-purple-300 hover:shadow-md active:scale-95 transition-all cursor-pointer no-underline"
                 style={{ animationDelay: `${i * 100}ms`, animation: 'fadeIn 0.5s ease-out both' }}
               >
                 <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-purple-300 to-violet-400 flex items-center justify-center shadow-md overflow-hidden">
                   <img
                     src={person.bild}
                     alt={person.name}
+                    loading="lazy"
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       e.target.style.display = 'none'
@@ -129,7 +129,7 @@ export default function TeamSeite({ onZurueck }) {
           <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-4">
 
             {/* Pipeline 1: Live (schnell) */}
-            <div className="rounded-2xl bg-white/40 border border-purple-200/50 backdrop-blur-sm p-4 sm:p-5">
+            <div className="rounded-2xl border border-purple-200/50 p-4 sm:p-5">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-8 h-8 rounded-lg bg-green-500 flex items-center justify-center">
                   <Zap size={16} className="text-white" />
@@ -162,7 +162,7 @@ export default function TeamSeite({ onZurueck }) {
             </div>
 
             {/* Pipeline 2: KI-Korrektur (präzise) */}
-            <div className="rounded-2xl bg-white/40 border border-purple-200/50 backdrop-blur-sm p-4 sm:p-5">
+            <div className="rounded-2xl border border-purple-200/50 p-4 sm:p-5">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-8 h-8 rounded-lg bg-violet-500 flex items-center justify-center">
                   <Cpu size={16} className="text-white" />
@@ -213,7 +213,7 @@ export default function TeamSeite({ onZurueck }) {
           </div>
 
           {/* Datenbank-Zeile */}
-          <div className="w-full rounded-2xl bg-white/40 border border-purple-200/50 backdrop-blur-sm p-4 sm:p-5 flex items-center justify-center gap-3">
+          <div className="w-full rounded-2xl border border-purple-200/50 p-4 sm:p-5 flex items-center justify-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-blue-500 flex items-center justify-center flex-shrink-0">
               <Database size={18} className="text-white" />
             </div>
@@ -262,14 +262,15 @@ export default function TeamSeite({ onZurueck }) {
             <div className="flex-1 h-px bg-purple-200" />
           </div>
 
-          <div className="flex flex-col items-center gap-3 p-5 sm:p-6 rounded-2xl bg-white/30 border border-purple-200/50 backdrop-blur-sm w-full sm:w-auto">
+          <div className="flex flex-col items-center gap-3 p-5 sm:p-6 rounded-2xl border border-purple-200/50 w-full sm:w-auto">
             <h3 className="text-base sm:text-lg font-bold text-purple-900">Probier UTE selbst aus!</h3>
             <div className="flex flex-col items-center gap-2">
               <img
-                src="/QR-Code-UTE.png"
+                src="/QR-Code-UTE.webp"
                 alt="QR-Code zum Projekt"
+                loading="lazy"
                 className="rounded-2xl shadow-lg border-2 border-purple-200"
-                style={{ width: 180, height: 180, objectFit: 'contain' }}
+                style={{ width: 216, height: 216, objectFit: 'contain' }}
               />
               <p className="text-xs text-purple-500 font-medium">Scanne mich!</p>
             </div>
