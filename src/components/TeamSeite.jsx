@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { ArrowLeft, Linkedin, Cpu, Database, Search, Shield, ChevronDown, Zap, Mic } from 'lucide-react'
+import { ArrowLeft, Cpu, Database, Search, Shield, ChevronDown, Zap, Mic } from 'lucide-react'
 
 // ── Team-Mitglieder (v.l.n.r. wie auf dem Foto) ──
 const TEAM = [
@@ -97,11 +97,7 @@ export default function TeamSeite({ onZurueck }) {
                   />
                   <span className="text-white font-bold text-lg sm:text-xl hidden items-center justify-center w-full h-full">{person.name[0]}</span>
                 </div>
-                <span className="font-bold text-purple-900 text-sm sm:text-base flex items-center gap-1">
-                  {person.name}
-                  <Linkedin size={14} className="text-[#0A66C2]" />
-                </span>
-                <span className="text-xs text-purple-500 text-center leading-tight">{person.rolle}</span>
+                <span className="font-bold text-purple-900 text-sm sm:text-base">{person.name}</span>
               </a>
             ))}
           </div>
