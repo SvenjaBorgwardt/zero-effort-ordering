@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { ArrowLeft, Linkedin, Mic, Cpu, Database, Search, Shield, ChevronDown, Zap, Clock } from 'lucide-react'
+import { ArrowLeft, Linkedin, Cpu, Database, Search, Shield, ChevronDown, Zap, Mic } from 'lucide-react'
 
 // ── Team-Mitglieder (v.l.n.r. wie auf dem Foto) ──
 const TEAM = [

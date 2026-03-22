@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { Mic, MicOff, Check, X, AlertTriangle, User, ShoppingCart, Coffee, CreditCard, Banknote, Leaf, Info, Wheat, Egg, Milk, Bean, Nut, Fish, Shell, CircleAlert, Menu } from 'lucide-react'
 import { transkribiere, erkenneSprache, speichereKassenBestellung, ladeKatalog } from '../services/api'
 import { UTELogo } from './ute-logo'
+import TeamSeite from './TeamSeite'
 
 // ============================================================
 // PRODUKT-KATEGORIEN (für Touchscreen-Buttons)
@@ -357,6 +358,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
   const [zahlart, setZahlart] = useState('bar')
   const [stammkundePopup, setStammkundePopup] = useState(false)
   const [crossSelling, setCrossSelling] = useState(null) // null oder Produkt-Vorschlag
+  const [teamSeite, setTeamSeite] = useState(false) // Team-Seite anzeigen
 
   // Allergen-Feature
   const [allergenInfo, setAllergenInfo] = useState(null) // null oder {produkt, ...}
@@ -873,6 +875,11 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
     )
   }
 
+  // ── TEAM-SEITE ──
+  if (teamSeite) {
+    return <TeamSeite onZurueck={() => setTeamSeite(false)} />
+  }
+
   // ── HAUPT-LAYOUT ──
   return (
     <div className="h-screen bg-baeckerei-bg flex flex-col overflow-hidden">
@@ -882,7 +889,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
           <UTELogo size={36} className="sm:hidden" />
           <UTELogo size={44} className="hidden sm:flex" />
           <div>
-            <h1 className="text-base sm:text-xl font-extrabold text-baeckerei-text tracking-tight" style={{ fontFamily: "'DM Sans', sans-serif" }}>UTE</h1>
+            <h1 onClick={() => setTeamSeite(true)} className="text-base sm:text-xl font-extrabold text-baeckerei-text tracking-tight cursor-pointer hover:text-purple-600 transition-colors" style={{ fontFamily: "'DM Sans', sans-serif" }}>UTE</h1>
             <p className="text-xs text-baeckerei-text-secondary font-medium">Hallo, {mitarbeiter?.name}</p>
           </div>
         </div>
