@@ -1163,8 +1163,16 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
         </div>
       </div>
 
+      {/* Spacer auf Mobile damit Content nicht von der fixed Sprach-Leiste verdeckt wird */}
+      <div className="md:hidden flex-shrink-0 h-[72px]" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }} />
+
       {/* ═══ SPRACH-LEISTE (unten) ═══ */}
-      <div className="border-t-2 md:border-t border-purple-200 md:border-purple-100/40 bg-white px-3 sm:px-5 py-3 sm:py-3 flex items-center gap-3 sm:gap-4 flex-shrink-0 shadow-[0_-4px_16px_rgba(124,58,237,0.10)] md:shadow-[0_-2px_10px_rgba(124,58,237,0.06)]">
+      {/* Mobile: fixed am unteren Rand mit iOS safe-area Abstand */}
+      {/* Desktop: normal im Flex-Flow */}
+      <div
+        className="border-t-2 md:border-t border-purple-200 md:border-purple-100/40 bg-white px-3 sm:px-5 py-3 flex items-center gap-3 sm:gap-4 flex-shrink-0 shadow-[0_-4px_16px_rgba(124,58,237,0.10)] md:shadow-[0_-2px_10px_rgba(124,58,237,0.06)] fixed md:static bottom-0 left-0 right-0 z-40 md:z-auto"
+        style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
+      >
         {!sprachModus && !verarbeitung && (
           <>
             <button onClick={starteAufnahme}
