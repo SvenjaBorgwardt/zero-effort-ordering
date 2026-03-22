@@ -971,13 +971,13 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
         {/* ── LINKE SEITE: PRODUKT-BUTTONS ── */}
         <div className={`w-full md:w-1/2 flex flex-col border-r border-purple-100/40 overflow-hidden ${mobileAnsicht !== 'produkte' ? 'hidden md:flex' : 'flex'}`}>
           {/* Kategorie-Tabs */}
-          <div className="flex gap-1 sm:gap-1.5 p-2 sm:p-2.5 bg-white/60 border-b border-purple-100/40 overflow-x-auto flex-shrink-0 scrollbar-none">
+          <div className="flex gap-1 sm:gap-1.5 p-2 sm:p-2.5 border-b border-purple-200/40 overflow-x-auto flex-shrink-0 scrollbar-none">
             {KATEGORIEN.map(kat => (
               <button key={kat.id} onClick={() => setAktiveKategorie(kat.id)}
                 className={`px-2.5 sm:px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-colors min-h-[36px]
                   ${aktiveKategorie === kat.id
                     ? 'bg-baeckerei-accent text-white shadow-sm'
-                    : 'bg-white/80 text-baeckerei-text-secondary border border-purple-100 hover:border-purple-300 hover:bg-white'
+                    : 'bg-baeckerei-bg/60 text-baeckerei-text-secondary border border-purple-200/60 hover:border-purple-300 hover:bg-baeckerei-bg'
                   }`}>
                 {kat.label}
               </button>
@@ -1057,22 +1057,9 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
         </div>
 
         {/* ── RECHTE SEITE: BESTELLLISTE ── */}
-        <div className={`w-full md:w-1/2 flex flex-col overflow-hidden relative ${mobileAnsicht !== 'warenkorb' ? 'hidden md:flex' : 'flex'}`}>
-          {/* Croissant Hintergrundbild – wie im Login */}
-          <img
-            src="/ute-logo.png"
-            alt=""
-            aria-hidden="true"
-            className="absolute pointer-events-none select-none w-[280px] h-[280px] sm:w-[320px] sm:h-[320px] opacity-[0.04]"
-            style={{
-              objectFit: 'contain',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-            }}
-          />
+        <div className={`w-full md:w-1/2 flex flex-col overflow-hidden ${mobileAnsicht !== 'warenkorb' ? 'hidden md:flex' : 'flex'}`}>
           {/* Bestellpositionen */}
-          <div className="flex-1 overflow-y-auto p-2 sm:p-3 relative z-[1]">
+          <div className="flex-1 overflow-y-auto p-2 sm:p-3">
             {anzeigePositionen.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-baeckerei-text-secondary px-4">
                 <ShoppingCart size={32} className="mb-3 text-baeckerei-text-secondary" />
