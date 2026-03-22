@@ -429,6 +429,10 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
         kategorie: m.produkt.kategorie,
         istLive: true, // Markierung für UI
       })))
+
+      // Cross-Selling SOFORT bei Live-Erkennung anzeigen
+      const letztesMatch = matches[matches.length - 1]
+      if (letztesMatch) prüfeCrossSelling(letztesMatch.produkt)
     }
   }, [liveText, sprachModus, produkte])
 
@@ -710,6 +714,13 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
         return neu
       })
       setLivePositionen([])
+
+      // Cross-Selling sofort bei Sprachübernahme auslösen
+      const letzteLivePosition = livePositionen[livePositionen.length - 1]
+      if (letzteLivePosition) {
+        const triggerProdukt = produkte.find(p => p.id === letzteLivePosition.produkt_id)
+        if (triggerProdukt) prüfeCrossSelling(triggerProdukt)
+      }
     }
 
     // HINTERGRUND: Voxtral + Mistral als Korrektur-Pass
@@ -736,6 +747,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
       const erkennungsErgebnis = await erkenneSprache(text)
       if (erkennungsErgebnis.success && erkennungsErgebnis.positionen?.length > 0) {
         // Korrektur-Pass: Mistral-Ergebnis überschreibt nur wenn es besser/anders ist
+        let neueProdukte = []
         setPositionen(prev => {
           const neu = [...prev]
           erkennungsErgebnis.positionen.forEach(ep => {
@@ -754,10 +766,18 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
             } else {
               // Neues Produkt das Live nicht erkannt hat → hinzufügen
               neu.push(ep)
+              neueProdukte.push(ep)
             }
           })
           return neu
         })
+
+        // Cross-Selling für neue Produkte aus dem Korrektur-Pass
+        const letzteNeue = neueProdukte[neueProdukte.length - 1] || erkennungsErgebnis.positionen[erkennungsErgebnis.positionen.length - 1]
+        if (letzteNeue) {
+          const triggerProdukt = produkte.find(p => p.id === letzteNeue.produkt_id)
+          if (triggerProdukt) prüfeCrossSelling(triggerProdukt)
+        }
       }
     } catch (err) {
       // Kein Fehler anzeigen wenn Live-Erkennung schon was hat
