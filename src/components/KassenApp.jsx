@@ -61,18 +61,43 @@ const ALLERGEN_ICON_MAP = {
   'N': Shell,                                            // Weichtiere
 }
 
-const AllergenIcon = ({ code, size = 18 }) => {
+// Farben pro Allergen-Typ für farbige Icons
+const ALLERGEN_FARBE = {
+  'A': '#B45309', 'A1': '#B45309', 'A2': '#B45309', 'A3': '#B45309', // Getreide = warm braun
+  'B': '#DC2626', 'N': '#DC2626',  // Krebstiere/Weichtiere = rot
+  'C': '#D97706',                    // Ei = amber
+  'D': '#2563EB',                    // Fisch = blau
+  'E': '#92400E', 'H': '#92400E', 'H1': '#92400E', 'H2': '#92400E', 'H3': '#92400E', // Nüsse = dunkelbraun
+  'F': '#16A34A',                    // Soja = grün
+  'G': '#3B82F6',                    // Milch = hellblau
+  'I': '#059669', 'J': '#CA8A04', 'K': '#A16207', 'L': '#7C3AED', 'M': '#DB2777', // Rest
+}
+
+const AllergenIcon = ({ code, size = 18, farbig = false }) => {
   const IconComponent = ALLERGEN_ICON_MAP[code]
+  const farbe = farbig ? ALLERGEN_FARBE[code] : 'currentColor'
   if (IconComponent) {
-    return <IconComponent size={size} strokeWidth={2.5} />
+    return <IconComponent size={size} strokeWidth={2.5} style={farbig ? { color: farbe } : {}} />
   }
-  // Buchstaben-Badge für Allergene ohne eigenes Icon (I=Sellerie, J=Senf, K=Sesam, L=Sulfite, M=Lupine)
+  // Buchstaben-Badge für Allergene ohne eigenes Icon
   return (
-    <span className="inline-flex items-center justify-center font-bold rounded"
-      style={{ width: size, height: size, fontSize: size * 0.65, lineHeight: 1 }}>
+    <span className="inline-flex items-center justify-center font-bold rounded-full"
+      style={{ width: size, height: size, fontSize: size * 0.6, lineHeight: 1,
+               background: farbig ? farbe : 'transparent', color: farbig ? '#fff' : 'currentColor' }}>
       {code}
     </span>
   )
+}
+
+// Dedupliziert Allergen-Icons nach Icon-Typ (z.B. A + A1 = nur 1x Wheat)
+function uniqueAllergenIcons(allergene) {
+  const seen = new Set()
+  return allergene.filter(code => {
+    const icon = ALLERGEN_ICON_MAP[code]?.name || code
+    if (seen.has(icon)) return false
+    seen.add(icon)
+    return true
+  })
 }
 
 // Kurznamen für Allergen-Tags
@@ -828,12 +853,12 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
   return (
     <div className="h-screen bg-baeckerei-bg flex flex-col overflow-hidden">
       {/* ═══ HEADER ═══ */}
-      <header className="bg-white border-b border-violet-100 px-4 py-2 flex items-center justify-between flex-shrink-0">
+      <header className="bg-white border-b border-purple-100/60 px-5 py-2.5 flex items-center justify-between flex-shrink-0 shadow-sm">
         <div className="flex items-center gap-3">
-          <UTELogo size={36} />
+          <UTELogo size={44} />
           <div>
-            <h1 className="text-lg font-bold text-baeckerei-text">UTE Kasse</h1>
-            <p className="text-xs text-baeckerei-text-secondary">Hallo, {mitarbeiter?.name}</p>
+            <h1 className="text-xl font-extrabold text-baeckerei-text tracking-tight">UTE Kasse</h1>
+            <p className="text-xs text-baeckerei-text-secondary font-medium">Hallo, {mitarbeiter?.name}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -873,15 +898,15 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
       <div className="flex-1 flex overflow-hidden">
 
         {/* ── LINKE SEITE: PRODUKT-BUTTONS ── */}
-        <div className="w-1/2 flex flex-col border-r border-violet-100 overflow-hidden">
+        <div className="w-1/2 flex flex-col border-r border-purple-100/40 overflow-hidden">
           {/* Kategorie-Tabs */}
-          <div className="flex gap-1 p-2 bg-violet-50/50 border-b border-violet-100 overflow-x-auto flex-shrink-0">
+          <div className="flex gap-1.5 p-2.5 bg-white/60 border-b border-purple-100/40 overflow-x-auto flex-shrink-0">
             {KATEGORIEN.map(kat => (
               <button key={kat.id} onClick={() => setAktiveKategorie(kat.id)}
                 className={`px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-colors
                   ${aktiveKategorie === kat.id
                     ? 'bg-baeckerei-accent text-white shadow-sm'
-                    : 'bg-white text-baeckerei-text-secondary border border-violet-200 hover:border-baeckerei-accent'
+                    : 'bg-white/80 text-baeckerei-text-secondary border border-purple-100 hover:border-purple-300 hover:bg-white'
                   }`}>
                 {kat.label}
               </button>
@@ -908,17 +933,17 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
           )}
 
           {/* Produkt-Grid */}
-          <div className="flex-1 overflow-y-auto p-2">
-            <div className="grid grid-cols-3 gap-2">
+          <div className="flex-1 overflow-y-auto p-3">
+            <div className="grid grid-cols-3 gap-2.5">
               {gefilterteProdukte.map(produkt => {
                 const istGesperrt = hatGesperrtesAllergen(produkt, gesperrteAllergene)
                 return (
                   <div key={produkt.id} className="relative">
                     <button onClick={() => produktHinzufuegen(produkt)}
-                      className={`w-full rounded-xl border-2 p-3 text-left transition-all flex flex-col justify-between min-h-[80px]
+                      className={`w-full rounded-2xl border p-3.5 text-left transition-all flex flex-col justify-between min-h-[85px]
                         ${istGesperrt
-                          ? 'bg-stone-100 border-red-200 opacity-60'
-                          : 'bg-white border-violet-100 hover:border-baeckerei-accent hover:shadow-sm active:bg-violet-50'
+                          ? 'bg-gray-50 border-red-200 opacity-50'
+                          : 'bg-white border-purple-100/60 hover:border-purple-400 hover:shadow-md active:bg-purple-50/50 shadow-sm'
                         }`}>
                       <span className={`font-medium text-sm leading-tight pr-6 ${istGesperrt ? 'text-stone-400' : 'text-baeckerei-text'}`}>
                         {produkt.name || produkt.produkt_name}
@@ -939,8 +964,8 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
                           <span className="text-xs text-red-500 ml-auto font-medium"><AlertTriangle size={12} /></span>
                         )}
                         {!istGesperrt && produkt.allergene?.length > 0 && (
-                          <span className="flex items-center gap-1 text-violet-600 ml-auto">
-                            {produkt.allergene.slice(0, 3).map(a => <AllergenIcon key={a} code={a} size={20} />)}
+                          <span className="flex items-center gap-1.5 ml-auto">
+                            {uniqueAllergenIcons(produkt.allergene).slice(0, 4).map(a => <AllergenIcon key={a} code={a} size={20} farbig />)}
                           </span>
                         )}
                       </div>
@@ -979,7 +1004,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
                       className={`rounded-xl border p-3 flex items-center gap-3 transition-all
                         ${istLive
                           ? 'bg-blue-50 border-blue-200 border-dashed animate-pulse'
-                          : 'bg-white border-violet-200'
+                          : 'bg-white border-purple-100/60 shadow-sm'
                         }`}>
                       {/* Live-Indikator */}
                       {istLive && (
@@ -1038,28 +1063,28 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
           )}
 
           {/* ═══ KASSIEREN-BEREICH ═══ */}
-          <div className="border-t border-violet-100 bg-white p-3 flex-shrink-0">
+          <div className="border-t border-purple-100/40 bg-white p-4 flex-shrink-0">
             {/* Gesamtpreis */}
             <div className="flex justify-between items-center mb-3">
-              <span className="text-lg font-bold text-baeckerei-text">Gesamt</span>
-              <span className="text-2xl font-bold text-baeckerei-accent">{formatPreis(gesamtpreis)}</span>
+              <span className="text-xl font-bold text-baeckerei-text">Gesamt</span>
+              <span className="text-3xl font-extrabold text-baeckerei-accent tracking-tight">{formatPreis(gesamtpreis)}</span>
             </div>
             {/* Zahlart + Kassieren */}
-            <div className="flex gap-2">
+            <div className="flex gap-2.5">
               <button onClick={() => setZahlart('bar')}
-                className={`flex-1 py-3 rounded-xl font-medium text-sm transition-colors
-                  ${zahlart === 'bar' ? 'bg-green-50 border-2 border-green-500 text-green-700 font-semibold' : 'bg-white border-2 border-violet-200 text-baeckerei-text-secondary hover:border-violet-400'}`}>
+                className={`flex-1 py-3 rounded-2xl font-medium text-sm transition-all
+                  ${zahlart === 'bar' ? 'bg-emerald-50 border-2 border-emerald-500 text-emerald-700 font-semibold shadow-sm' : 'bg-white border-2 border-purple-100 text-baeckerei-text-secondary hover:border-purple-300'}`}>
                 <Banknote size={16} className="inline mr-1" /> Bar
               </button>
               <button onClick={() => setZahlart('karte')}
-                className={`flex-1 py-3 rounded-xl font-medium text-sm transition-colors
-                  ${zahlart === 'karte' ? 'bg-blue-50 border-2 border-blue-500 text-blue-700 font-semibold' : 'bg-white border-2 border-violet-200 text-baeckerei-text-secondary hover:border-violet-400'}`}>
+                className={`flex-1 py-3 rounded-2xl font-medium text-sm transition-all
+                  ${zahlart === 'karte' ? 'bg-blue-50 border-2 border-blue-500 text-blue-700 font-semibold shadow-sm' : 'bg-white border-2 border-purple-100 text-baeckerei-text-secondary hover:border-purple-300'}`}>
                 <CreditCard size={16} className="inline mr-1" /> Karte
               </button>
               <button onClick={kassieren} disabled={positionen.length === 0}
-                className="flex-[2] py-3 rounded-xl text-white text-lg font-bold shadow-lg active:scale-95 transition-all
-                           disabled:opacity-30 disabled:cursor-not-allowed"
-                style={{ background: positionen.length > 0 ? 'linear-gradient(135deg, #6D28D9, #4C1D95)' : '#6D28D9' }}>
+                className="flex-[2] py-3.5 rounded-2xl text-white text-lg font-bold shadow-lg active:scale-[0.98] transition-all
+                           disabled:opacity-25 disabled:cursor-not-allowed"
+                style={{ background: positionen.length > 0 ? 'linear-gradient(135deg, #7C3AED 0%, #5B21B6 50%, #4C1D95 100%)' : '#9CA3AF' }}>
                 <Check size={18} className="inline mr-1" /> Kassieren
               </button>
             </div>
@@ -1068,7 +1093,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
       </div>
 
       {/* ═══ SPRACH-LEISTE (unten) ═══ */}
-      <div className="border-t-2 border-violet-200 bg-white px-4 py-2 flex items-center gap-4 flex-shrink-0">
+      <div className="border-t border-purple-100/40 bg-white px-5 py-3 flex items-center gap-4 flex-shrink-0 shadow-[0_-2px_10px_rgba(124,58,237,0.06)]">
         {!sprachModus && !verarbeitung && (
           <>
             <button onClick={starteAufnahme}
