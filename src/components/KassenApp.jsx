@@ -120,18 +120,25 @@ const ALLERGEN_KURZ = {
 // ============================================================
 // Erkennt Phrasen wie "keine Nüsse", "ohne Milch", "allergie gegen Ei"
 const ALLERGEN_SPRACH_MAP = [
-  { phrasen: ['keine nüsse', 'ohne nüsse', 'nussallergie', 'nuss allergie', 'allergie gegen nüsse', 'keine nuss', 'ohne nuss'], codes: ['H', 'H1', 'H2', 'H3'] },
-  { phrasen: ['keine mandeln', 'ohne mandeln', 'mandelallergie'], codes: ['H1'] },
-  { phrasen: ['keine haselnüsse', 'ohne haselnüsse', 'keine haselnuss', 'ohne haselnuss'], codes: ['H2'] },
-  { phrasen: ['keine walnüsse', 'ohne walnüsse', 'keine walnuss', 'ohne walnuss'], codes: ['H3'] },
-  { phrasen: ['keine milch', 'ohne milch', 'laktosefrei', 'milchallergie', 'laktose', 'keine laktose', 'ohne laktose'], codes: ['G'] },
-  { phrasen: ['kein ei', 'keine eier', 'ohne ei', 'ohne eier', 'eiallergie', 'ei allergie'], codes: ['C'] },
-  { phrasen: ['kein gluten', 'ohne gluten', 'glutenfrei', 'zöliakie', 'glutenunverträglichkeit', 'kein weizen', 'ohne weizen'], codes: ['A', 'A1', 'A2', 'A3'] },
-  { phrasen: ['kein sesam', 'ohne sesam', 'sesamallergie'], codes: ['K'] },
-  { phrasen: ['keine soja', 'ohne soja', 'kein soja', 'sojaallergie'], codes: ['F'] },
-  { phrasen: ['kein senf', 'ohne senf', 'senfallergie'], codes: ['J'] },
-  { phrasen: ['keine erdnüsse', 'ohne erdnüsse', 'erdnussallergie', 'keine erdnuss', 'ohne erdnuss'], codes: ['E'] },
-  { phrasen: ['keine lupine', 'ohne lupine'], codes: ['M'] },
+  { phrasen: ['keine nüsse', 'ohne nüsse', 'nussallergie', 'nuss allergie', 'allergie gegen nüsse', 'keine nuss', 'ohne nuss', 'nüsse allergie', 'nuss-allergie'], codes: ['H', 'H1', 'H2', 'H3'] },
+  { phrasen: ['keine mandeln', 'ohne mandeln', 'mandelallergie', 'mandel allergie', 'mandel-allergie'], codes: ['H1'] },
+  { phrasen: ['keine haselnüsse', 'ohne haselnüsse', 'keine haselnuss', 'ohne haselnuss', 'haselnussallergie'], codes: ['H2'] },
+  { phrasen: ['keine walnüsse', 'ohne walnüsse', 'keine walnuss', 'ohne walnuss', 'walnussallergie'], codes: ['H3'] },
+  { phrasen: ['keine milch', 'ohne milch', 'laktosefrei', 'milchallergie', 'laktose', 'keine laktose', 'ohne laktose', 'milch allergie', 'laktose frei', 'lacktose', 'lactose'], codes: ['G'] },
+  { phrasen: ['kein ei', 'keine eier', 'ohne ei', 'ohne eier', 'eiallergie', 'ei allergie', 'ei-allergie', 'eier allergie'], codes: ['C'] },
+  { phrasen: ['kein gluten', 'ohne gluten', 'glutenfrei', 'zöliakie', 'glutenunverträglichkeit', 'kein weizen', 'ohne weizen', 'gluten frei', 'kluten', 'glucken', 'zöli'], codes: ['A', 'A1', 'A2', 'A3'] },
+  { phrasen: [
+    'kein sesam', 'ohne sesam', 'sesamallergie', 'sesam allergie', 'sesam-allergie',
+    // Speech-API-Varianten für Sesam (häufige Verhörer)
+    'cesar', 'sesum', 'sesem', 'sessam', 'sezam', 'simsam', 'sim sam', 'sisam',
+    'kein cesar', 'ohne cesar', 'kein sesum', 'ohne sesum', 'kein sessam', 'ohne sessam',
+    'sesam unverträglichkeit', 'verträgt kein sesam', 'allergie sesam', 'allergie cesar',
+    'tante sesam', 'tante cesar', 'tante hat sesam', 'tante verträgt kein',
+  ], codes: ['K'] },
+  { phrasen: ['keine soja', 'ohne soja', 'kein soja', 'sojaallergie', 'soja allergie', 'soja-allergie'], codes: ['F'] },
+  { phrasen: ['kein senf', 'ohne senf', 'senfallergie', 'senf allergie', 'senf-allergie'], codes: ['J'] },
+  { phrasen: ['keine erdnüsse', 'ohne erdnüsse', 'erdnussallergie', 'keine erdnuss', 'ohne erdnuss', 'erdnuss allergie', 'erdnuss-allergie', 'erd nuss'], codes: ['E'] },
+  { phrasen: ['keine lupine', 'ohne lupine', 'lupinen allergie', 'lupinenallergie'], codes: ['M'] },
 ]
 
 // ============================================================
@@ -139,9 +146,15 @@ const ALLERGEN_SPRACH_MAP = [
 // ============================================================
 // Erkennt Phrasen wie "vegan", "bio", "ohne Tierprodukte"
 const BESONDERHEITEN_SPRACH_MAP = [
-  { phrasen: ['vegan', 'veganes', 'vegane', 'ohne tierprodukte', 'pflanzlich', 'rein pflanzlich', 'ohne tier', 'tierfrei'], id: 'vegan' },
-  { phrasen: ['bio', 'biologisch', 'ökologisch', 'öko', 'aus biologischem', 'bio produkte', 'bio-'], id: 'bio' },
-  { phrasen: ['regional', 'aus der region', 'von hier', 'regionale', 'regionales', 'heimisch'], id: 'regional' },
+  { phrasen: [
+    'vegan', 'veganes', 'vegane', 'ohne tierprodukte', 'pflanzlich', 'rein pflanzlich', 'ohne tier', 'tierfrei',
+    // Speech-API-Varianten für "vegan" (häufige Verhörer)
+    'wegan', 'wigan', 'fegan', 'vegen', 'vigan', 'began', 'viган', 'wekan', 'fikan',
+    'was veganes', 'gerne vegan', 'bitte vegan', 'lieber vegan', 'am liebsten vegan',
+    'nur vegane', 'nur vegan', 'alles vegan',
+  ], id: 'vegan' },
+  { phrasen: ['bio', 'biologisch', 'ökologisch', 'öko', 'aus biologischem', 'bio produkte', 'bio-', 'bioproduk', 'bioprodukte'], id: 'bio' },
+  { phrasen: ['regional', 'aus der region', 'von hier', 'regionale', 'regionales', 'heimisch', 'lokal', 'lokale', 'lokales'], id: 'regional' },
 ]
 
 /**
