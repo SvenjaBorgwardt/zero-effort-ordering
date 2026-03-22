@@ -857,7 +857,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
   return (
     <div className="h-screen bg-baeckerei-bg flex flex-col overflow-hidden">
       {/* ═══ HEADER ═══ */}
-      <header className="bg-white border-b border-purple-100/60 px-3 sm:px-5 py-2 sm:py-2.5 flex items-center justify-between flex-shrink-0 shadow-sm">
+      <header className="border-b border-purple-300/30 px-3 sm:px-5 py-2 sm:py-2.5 flex items-center justify-between flex-shrink-0 shadow-sm" style={{ background: 'linear-gradient(135deg, #DDD6F3 0%, #D4CBF0 100%)' }}>
         <div className="flex items-center gap-2 sm:gap-3">
           <UTELogo size={36} className="sm:hidden" />
           <UTELogo size={44} className="hidden sm:flex" />
@@ -1057,9 +1057,22 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
         </div>
 
         {/* ── RECHTE SEITE: BESTELLLISTE ── */}
-        <div className={`w-full md:w-1/2 flex flex-col overflow-hidden ${mobileAnsicht !== 'warenkorb' ? 'hidden md:flex' : 'flex'}`}>
+        <div className={`w-full md:w-1/2 flex flex-col overflow-hidden relative ${mobileAnsicht !== 'warenkorb' ? 'hidden md:flex' : 'flex'}`}>
+          {/* Croissant Hintergrundbild – wie im Login */}
+          <img
+            src="/ute-logo.png"
+            alt=""
+            aria-hidden="true"
+            className="absolute pointer-events-none select-none w-[280px] h-[280px] sm:w-[320px] sm:h-[320px] opacity-[0.04]"
+            style={{
+              objectFit: 'contain',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+            }}
+          />
           {/* Bestellpositionen */}
-          <div className="flex-1 overflow-y-auto p-2 sm:p-3">
+          <div className="flex-1 overflow-y-auto p-2 sm:p-3 relative z-[1]">
             {anzeigePositionen.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-baeckerei-text-secondary px-4">
                 <ShoppingCart size={32} className="mb-3 text-baeckerei-text-secondary" />
