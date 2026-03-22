@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 html {
-  font-size: 100%;
+  font-size: 115%;
 }
 
 @media (min-width: 768px) {

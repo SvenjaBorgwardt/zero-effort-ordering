@@ -1035,8 +1035,8 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
                           <span className="text-xs text-red-500 ml-auto font-medium"><AlertTriangle size={12} /></span>
                         )}
                         {!istGesperrt && produkt.allergene?.length > 0 && (
-                          <span className="hidden sm:flex items-center gap-1.5 ml-auto">
-                            {uniqueAllergenIcons(produkt.allergene).slice(0, 4).map(a => <AllergenIcon key={a} code={a} size={20} farbig />)}
+                          <span className="flex items-center gap-0.5 sm:gap-1.5 ml-auto">
+                            {uniqueAllergenIcons(produkt.allergene).slice(0, 3).map(a => <AllergenIcon key={a} code={a} size={15} farbig />)}
                           </span>
                         )}
                       </div>
@@ -1164,27 +1164,28 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
       </div>
 
       {/* ═══ SPRACH-LEISTE (unten) ═══ */}
-      <div className="border-t border-purple-100/40 bg-white px-3 sm:px-5 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-4 flex-shrink-0 shadow-[0_-2px_10px_rgba(124,58,237,0.06)]">
+      <div className="border-t-2 md:border-t border-purple-200 md:border-purple-100/40 bg-white px-3 sm:px-5 py-3 sm:py-3 flex items-center gap-3 sm:gap-4 flex-shrink-0 shadow-[0_-4px_16px_rgba(124,58,237,0.10)] md:shadow-[0_-2px_10px_rgba(124,58,237,0.06)]">
         {!sprachModus && !verarbeitung && (
           <>
             <button onClick={starteAufnahme}
-              className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl bg-red-500 hover:bg-red-600 active:bg-red-700 text-white font-semibold shadow-md active:scale-95 transition-all text-sm sm:text-base flex-shrink-0">
-              <Mic size={18} />
+              className="flex items-center gap-2 px-4 sm:px-5 py-3.5 sm:py-3 rounded-2xl bg-red-500 hover:bg-red-600 active:bg-red-700 text-white font-bold sm:font-semibold shadow-lg sm:shadow-md active:scale-95 transition-all text-base sm:text-base flex-shrink-0">
+              <Mic size={20} className="md:hidden" />
+              <Mic size={18} className="hidden md:block" />
               <span className="hidden sm:inline">Spracheingabe</span>
-              <span className="sm:hidden">Sprache</span>
+              <span className="sm:hidden">Spracheingabe</span>
             </button>
             <p className="text-xs sm:text-sm text-baeckerei-text-secondary hidden sm:block">Gespräch aufnehmen – Bestellung wird automatisch erkannt</p>
-            <p className="text-xs text-baeckerei-text-secondary sm:hidden">Bestellung per Sprache aufnehmen</p>
+            <p className="text-xs text-baeckerei-text-secondary sm:hidden leading-tight">Bestellung per Sprache aufnehmen</p>
           </>
         )}
 
         {sprachModus && (
           <>
-            <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-              <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-red-500 animate-pulse" />
-              <span className="font-semibold text-red-600 text-xs sm:text-sm">{formatZeit(aufnahmeZeit)}</span>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <span className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
+              <span className="font-semibold text-red-600 text-sm">{formatZeit(aufnahmeZeit)}</span>
             </div>
-            <div className="flex-1 bg-violet-50/50 rounded-xl px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-baeckerei-text min-h-[36px] sm:min-h-[40px] max-h-[50px] sm:max-h-[60px] overflow-y-auto min-w-0">
+            <div className="flex-1 bg-violet-50/50 rounded-xl px-2.5 sm:px-3 py-2 text-sm text-baeckerei-text min-h-[40px] max-h-[60px] overflow-y-auto min-w-0">
               {liveText || <span className="text-baeckerei-text-secondary italic">Warte auf Sprache…</span>}
               {/* Auto-erkannte Features anzeigen */}
               {(aktiveBesonderheiten.size > 0 || erkannterStammkunde) && (
@@ -1207,8 +1208,8 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
               )}
             </div>
             <button onClick={stoppeAufnahme}
-              className="px-3 sm:px-5 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl bg-baeckerei-accent hover:bg-baeckerei-accent-hover text-white font-semibold shadow-md active:scale-95 transition-all text-sm sm:text-base flex-shrink-0">
-              <Check size={14} className="inline mr-0.5 sm:mr-1" /> Fertig
+              className="px-4 sm:px-5 py-3 rounded-2xl bg-baeckerei-accent hover:bg-baeckerei-accent-hover text-white font-bold sm:font-semibold shadow-lg sm:shadow-md active:scale-95 transition-all text-base flex-shrink-0">
+              <Check size={16} className="inline mr-1" /> Fertig
             </button>
           </>
         )}
