@@ -1147,7 +1147,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
           )}
 
           {/* ═══ KASSIEREN-BEREICH ═══ */}
-          <div className="border-t border-purple-100/40 bg-white p-3 sm:p-4 flex-shrink-0">
+          <div className="border-t border-purple-200/40 p-3 sm:p-4 flex-shrink-0 relative z-[1]">
             {/* Gesamtpreis */}
             <div className="flex justify-between items-center mb-2 sm:mb-3">
               <span className="text-base sm:text-xl font-bold text-baeckerei-text">Gesamt</span>
@@ -1157,12 +1157,12 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
             <div className="flex gap-1.5 sm:gap-2.5">
               <button onClick={() => setZahlart('bar')}
                 className={`flex-1 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl font-medium text-xs sm:text-sm transition-all
-                  ${zahlart === 'bar' ? 'bg-emerald-50 border-2 border-emerald-500 text-emerald-700 font-semibold shadow-sm' : 'bg-white border-2 border-purple-100 text-baeckerei-text-secondary hover:border-purple-300'}`}>
+                  ${zahlart === 'bar' ? 'bg-emerald-50 border-2 border-emerald-500 text-emerald-700 font-semibold shadow-sm' : 'bg-baeckerei-bg/60 border-2 border-purple-200/60 text-baeckerei-text-secondary hover:border-purple-300'}`}>
                 <Banknote size={14} className="inline mr-0.5 sm:mr-1" /> Bar
               </button>
               <button onClick={() => setZahlart('karte')}
                 className={`flex-1 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl font-medium text-xs sm:text-sm transition-all
-                  ${zahlart === 'karte' ? 'bg-blue-50 border-2 border-blue-500 text-blue-700 font-semibold shadow-sm' : 'bg-white border-2 border-purple-100 text-baeckerei-text-secondary hover:border-purple-300'}`}>
+                  ${zahlart === 'karte' ? 'bg-blue-50 border-2 border-blue-500 text-blue-700 font-semibold shadow-sm' : 'bg-baeckerei-bg/60 border-2 border-purple-200/60 text-baeckerei-text-secondary hover:border-purple-300'}`}>
                 <CreditCard size={14} className="inline mr-0.5 sm:mr-1" /> Karte
               </button>
               <button onClick={kassieren} disabled={positionen.length === 0}
