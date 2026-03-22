@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { Mic, MicOff, Check, X, AlertTriangle, User, ShoppingCart, Coffee, CreditCard, Banknote, Leaf, Info } from 'lucide-react'
+import { Mic, MicOff, Check, X, AlertTriangle, User, ShoppingCart, Coffee, CreditCard, Banknote, Leaf, Info, Wheat, Egg, Milk, Bean, Nut, Fish, Shell, CircleAlert } from 'lucide-react'
 import { transkribiere, erkenneSprache, speichereKassenBestellung, ladeKatalog } from '../services/api'
 import { UTELogo } from './ute-logo'
 
@@ -47,54 +47,32 @@ const CROSS_SELLING_REGELN = [
 // ============================================================
 // ALLERGEN-ICONS & FARBEN
 // ============================================================
-// Allergen-SVG-Icons (klar erkennbar für Bäckereifachverkäuferinnen)
-const AllergenIcon = ({ code, size = 16 }) => {
-  const s = size
-  const icons = {
-    // Ähre (Gluten/Getreide)
-    'A': <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 21V10"/><path d="M12 10C12 10 8 7 8 4c0 0 4 1 4 6"/><path d="M12 10c0 0 4-3 4-6 0 0-4 1-4 6"/><path d="M12 14c0 0-3-2-3-5 0 0 3 1 3 5"/><path d="M12 14c0 0 3-2 3-5 0 0-3 1-3 5"/></svg>,
-    'A1': <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 21V10"/><path d="M12 10C12 10 8 7 8 4c0 0 4 1 4 6"/><path d="M12 10c0 0 4-3 4-6 0 0-4 1-4 6"/></svg>,
-    'A2': <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 21V10"/><path d="M12 10C12 10 8 7 8 4c0 0 4 1 4 6"/><path d="M12 10c0 0 4-3 4-6 0 0-4 1-4 6"/></svg>,
-    'A3': <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 21V10"/><path d="M12 10C12 10 8 7 8 4c0 0 4 1 4 6"/><path d="M12 10c0 0 4-3 4-6 0 0-4 1-4 6"/></svg>,
-    // Krabbe (Krebstiere)
-    'B': <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="13" r="4"/><path d="M5 9l3 4"/><path d="M19 9l-3 4"/><path d="M8 17l-2 3"/><path d="M16 17l2 3"/><path d="M5 9l-1-3"/><path d="M19 9l1-3"/></svg>,
-    // Ei
-    'C': <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><ellipse cx="12" cy="14" rx="6" ry="7"/><path d="M12 3c-3 0-6 4.5-6 11" strokeLinecap="round"/><path d="M12 3c3 0 6 4.5 6 11" strokeLinecap="round"/></svg>,
-    // Fisch
-    'D': <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M2 12c3-4 7-6 12-6 2 0 4 1 6 3-2 2-4 3-6 3-5 0-9-2-12-6z"/><path d="M2 12c3 4 7 6 12 6 2 0 4-1 6-3"/><path d="M20 9l2-3"/><path d="M20 15l2 3"/><circle cx="16" cy="11" r="1" fill="currentColor"/></svg>,
-    // Erdnuss
-    'E': <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><ellipse cx="10" cy="9" rx="4" ry="5"/><ellipse cx="14" cy="15" rx="4" ry="5"/><path d="M12 4v16"/></svg>,
-    // Soja (Bohne)
-    'F': <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 3C8 3 5 7 5 12s3 9 7 9c4 0 7-4 7-9S16 3 12 3z"/><path d="M12 3v18"/></svg>,
-    // Milch
-    'G': <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 2h8l1 5H7l1-5z"/><rect x="7" y="7" width="10" height="14" rx="1"/><path d="M7 12h10"/></svg>,
-    // Nuss
-    'H': <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 4C7 4 4 8 4 13c0 4 3 7 8 7s8-3 8-7c0-5-3-9-8-9z"/><path d="M12 4v4"/><path d="M9 20c1-3 1-6 0-9"/><path d="M15 20c-1-3-1-6 0-9"/></svg>,
-    'H1': <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 4C7 4 4 8 4 13c0 4 3 7 8 7s8-3 8-7c0-5-3-9-8-9z"/><path d="M12 4v4"/></svg>,
-    'H2': <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 4C7 4 4 8 4 13c0 4 3 7 8 7s8-3 8-7c0-5-3-9-8-9z"/><path d="M12 4v4"/></svg>,
-    'H3': <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 4C7 4 4 8 4 13c0 4 3 7 8 7s8-3 8-7c0-5-3-9-8-9z"/><path d="M12 4v4"/></svg>,
-    // Sellerie
-    'I': <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 21v-8"/><path d="M8 21v-6c0-3 2-6 4-8"/><path d="M16 21v-6c0-3-2-6-4-8"/><path d="M12 7c-1-2-3-4-4-4"/><path d="M12 7c1-2 3-4 4-4"/></svg>,
-    // Senf
-    'J': <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="8" y="8" width="8" height="13" rx="2"/><path d="M10 8V5h4v3"/><path d="M12 2v3"/><path d="M8 14h8"/></svg>,
-    // Sesam (Körner)
-    'K': <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><ellipse cx="8" cy="8" rx="2" ry="3" transform="rotate(-20 8 8)"/><ellipse cx="16" cy="8" rx="2" ry="3" transform="rotate(20 16 8)"/><ellipse cx="12" cy="15" rx="2" ry="3"/><ellipse cx="6" cy="16" rx="2" ry="3" transform="rotate(-15 6 16)"/><ellipse cx="18" cy="16" rx="2" ry="3" transform="rotate(15 18 16)"/></svg>,
-    // Sulfite (SO₂)
-    'L': <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="8"/><text x="12" y="16" textAnchor="middle" fontSize="10" fill="currentColor" stroke="none" fontWeight="bold">S</text></svg>,
-    // Lupine (Blüte)
-    'M': <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 21v-8"/><path d="M12 13c-3 0-5-2-5-5 0 2-2 5 0 7"/><path d="M12 13c3 0 5-2 5-5 0 2 2 5 0 7"/><path d="M12 9c0-3-2-5-4-6 1 2 1 5 4 6"/><path d="M12 9c0-3 2-5 4-6-1 2-1 5-4 6"/></svg>,
-    // Weichtiere (Muschel)
-    'N': <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 17c0-6 3.5-13 8-13s8 7 8 13"/><path d="M4 17h16"/><path d="M8 17c0-4 1.5-8 4-10"/><path d="M16 17c0-4-1.5-8-4-10"/></svg>,
-  }
-  return icons[code] || <span style={{fontWeight:'bold',fontSize:s*0.7}}>{code}</span>
+// Allergen-Icons (Lucide + Buchstaben-Fallback)
+// wheat.svg → Gluten, egg.svg → Ei, milk.svg → Milch, bean.svg → Soja, nut.svg → Nüsse
+const ALLERGEN_ICON_MAP = {
+  'A': Wheat, 'A1': Wheat, 'A2': Wheat, 'A3': Wheat,  // Gluten/Getreide
+  'B': Shell,                                            // Krebstiere
+  'C': Egg,                                              // Ei
+  'D': Fish,                                             // Fisch
+  'E': Nut,                                              // Erdnuss
+  'F': Bean,                                             // Soja
+  'G': Milk,                                             // Milch
+  'H': Nut, 'H1': Nut, 'H2': Nut, 'H3': Nut,          // Nüsse
+  'N': Shell,                                            // Weichtiere
 }
 
-// Allergen-Icons Mapping (für .join() Kompatibilität im Produkt-Grid)
-const ALLERGEN_ICONS = {
-  'A': 'A', 'A1': 'A1', 'A2': 'A2', 'A3': 'A3',
-  'B': 'B', 'C': 'C', 'D': 'D', 'E': 'E',
-  'F': 'F', 'G': 'G', 'H': 'H', 'H1': 'H1', 'H2': 'H2', 'H3': 'H3',
-  'I': 'I', 'J': 'J', 'K': 'K', 'L': 'L', 'M': 'M', 'N': 'N',
+const AllergenIcon = ({ code, size = 18 }) => {
+  const IconComponent = ALLERGEN_ICON_MAP[code]
+  if (IconComponent) {
+    return <IconComponent size={size} strokeWidth={2.5} />
+  }
+  // Buchstaben-Badge für Allergene ohne eigenes Icon (I=Sellerie, J=Senf, K=Sesam, L=Sulfite, M=Lupine)
+  return (
+    <span className="inline-flex items-center justify-center font-bold rounded"
+      style={{ width: size, height: size, fontSize: size * 0.65, lineHeight: 1 }}>
+      {code}
+    </span>
+  )
 }
 
 // Kurznamen für Allergen-Tags
@@ -917,7 +895,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
               <div className="flex flex-wrap gap-1 flex-1">
                 {[...gesperrteAllergene].map(a => (
                   <span key={a} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-xs font-medium">
-                    <AllergenIcon code={a} size={14} /> {ALLERGEN_KURZ[a]}
+                    <AllergenIcon code={a} size={18} /> {ALLERGEN_KURZ[a]}
                     <button onClick={() => setGesperrteAllergene(prev => {
                       const neu = new Set(prev); neu.delete(a); return neu
                     })} className="ml-0.5 hover:text-red-900"><X size={12} /></button>
@@ -961,8 +939,8 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
                           <span className="text-xs text-red-500 ml-auto font-medium"><AlertTriangle size={12} /></span>
                         )}
                         {!istGesperrt && produkt.allergene?.length > 0 && (
-                          <span className="flex items-center gap-0.5 text-violet-500 ml-auto">
-                            {produkt.allergene.slice(0, 3).map(a => <AllergenIcon key={a} code={a} size={16} />)}
+                          <span className="flex items-center gap-1 text-violet-600 ml-auto">
+                            {produkt.allergene.slice(0, 3).map(a => <AllergenIcon key={a} code={a} size={20} />)}
                           </span>
                         )}
                       </div>
@@ -1236,7 +1214,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
                 <div className="flex flex-wrap gap-1.5">
                   {allergenInfo.allergene.map(a => (
                     <span key={a} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs font-medium">
-                      <AllergenIcon code={a} size={14} /> {ALLERGEN_KURZ[a] || a}
+                      <AllergenIcon code={a} size={18} /> {ALLERGEN_KURZ[a] || a}
                     </span>
                   ))}
                 </div>
@@ -1250,7 +1228,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
                 <div className="flex flex-wrap gap-1.5">
                   {allergenInfo.kann_enthalten.map(a => (
                     <span key={a} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-200 text-amber-700 text-xs font-medium">
-                      <AllergenIcon code={a} size={14} /> {ALLERGEN_KURZ[a] || a}
+                      <AllergenIcon code={a} size={18} /> {ALLERGEN_KURZ[a] || a}
                     </span>
                   ))}
                 </div>
@@ -1310,7 +1288,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
                           ? 'bg-red-500 text-white border border-red-500'
                           : 'bg-white text-violet-600 border border-violet-200 hover:border-red-300'
                         }`}>
-                      <AllergenIcon code={code} size={14} /> {ALLERGEN_KURZ[code]}
+                      <AllergenIcon code={code} size={18} /> {ALLERGEN_KURZ[code]}
                     </button>
                   )
                 })}
@@ -1347,7 +1325,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
                         <div className="flex flex-wrap gap-1.5 mb-3">
                           {[...alleAllergene].sort().map(a => (
                             <span key={a} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs font-medium">
-                              <AllergenIcon code={a} size={14} /> {ALLERGEN_KURZ[a] || a}
+                              <AllergenIcon code={a} size={18} /> {ALLERGEN_KURZ[a] || a}
                             </span>
                           ))}
                         </div>
@@ -1363,7 +1341,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
                           <div className="flex flex-wrap gap-1.5">
                             {[...alleKannEnthalten].sort().map(a => (
                               <span key={a} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-700 text-xs font-medium">
-                                <AllergenIcon code={a} size={14} /> {ALLERGEN_KURZ[a] || a}
+                                <AllergenIcon code={a} size={18} /> {ALLERGEN_KURZ[a] || a}
                               </span>
                             ))}
                           </div>
@@ -1392,12 +1370,12 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
                         <div className="flex flex-wrap gap-1">
                           {(prod?.allergene || []).map(a => (
                             <span key={a} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-red-100 text-red-600 text-xs">
-                              <AllergenIcon code={a} size={12} /> {ALLERGEN_KURZ[a]}
+                              <AllergenIcon code={a} size={18} /> {ALLERGEN_KURZ[a]}
                             </span>
                           ))}
                           {(prod?.kann_enthalten || []).map(a => (
                             <span key={'k-' + a} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-100 text-amber-600 text-xs">
-                              <AllergenIcon code={a} size={12} /> {ALLERGEN_KURZ[a]}?
+                              <AllergenIcon code={a} size={18} /> {ALLERGEN_KURZ[a]}?
                             </span>
                           ))}
                           {!prod?.allergene?.length && !prod?.kann_enthalten?.length && (
@@ -1435,7 +1413,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
             <div className="flex flex-wrap gap-1.5 justify-center mb-4">
               {allergenWarnung.allergene.map(a => (
                 <span key={a} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-red-100 border border-red-300 text-red-700 text-sm font-medium">
-                  <AllergenIcon code={a} size={16} /> {ALLERGEN_KURZ[a]}
+                  <AllergenIcon code={a} size={18} /> {ALLERGEN_KURZ[a]}
                 </span>
               ))}
             </div>
