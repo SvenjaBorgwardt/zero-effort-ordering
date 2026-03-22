@@ -34,6 +34,12 @@ body {
   display: none;
 }
 
+/* Cross-Selling Einblend-Animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 /* Sicherstellen, dass Touch-Targets groß genug sind */
 @media (max-width: 767px) {
   button {

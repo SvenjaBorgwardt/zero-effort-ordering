@@ -1119,20 +1119,6 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
             )}
           </div>
 
-          {/* Cross-Selling Popup */}
-          {crossSelling && (
-            <div className="mx-2 sm:mx-3 mb-2 bg-purple-50 border border-purple-200 rounded-xl p-2.5 sm:p-3 flex items-center gap-2 sm:gap-3 flex-shrink-0">
-              <Coffee size={18} className="text-purple-600 flex-shrink-0" />
-              <p className="flex-1 text-xs sm:text-sm text-purple-800">{crossSelling.text}</p>
-              <button onClick={() => { produktHinzufuegen(crossSelling.produkt); setCrossSelling(null) }}
-                className="px-2.5 sm:px-3 py-1.5 bg-baeckerei-accent text-white rounded-lg text-xs sm:text-sm font-medium hover:bg-baeckerei-accent-hover active:bg-baeckerei-accent-hover flex-shrink-0">
-                Ja!
-              </button>
-              <button onClick={() => setCrossSelling(null)}
-                className="text-purple-300 hover:text-purple-500 w-8 h-8 flex items-center justify-center flex-shrink-0"><X size={16} /></button>
-            </div>
-          )}
-
           {/* ═══ KASSIEREN-BEREICH ═══ */}
           <div className="border-t border-purple-200/40 p-3 sm:p-4 flex-shrink-0 relative z-[1]">
             {/* Gesamtpreis */}
@@ -1162,6 +1148,25 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
           </div>
         </div>
       </div>
+
+      {/* ═══ CROSS-SELLING BANNER (global, immer sichtbar) ═══ */}
+      {crossSelling && (
+        <div className="flex-shrink-0 mx-2 sm:mx-4 mb-1 md:mb-0 bg-gradient-to-r from-purple-100 via-purple-50 to-violet-100 border-2 border-purple-300 rounded-2xl p-3 sm:p-4 flex items-center gap-3 shadow-md animate-[fadeIn_0.3s_ease-out]">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-200 flex items-center justify-center flex-shrink-0">
+            <Coffee size={22} className="text-purple-700" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-purple-900 text-sm sm:text-base">{crossSelling.text}</p>
+            <p className="text-xs sm:text-sm text-purple-600 mt-0.5 truncate">{crossSelling.produkt.name} · {formatPreis(crossSelling.produkt.preis)}</p>
+          </div>
+          <button onClick={() => { produktHinzufuegen(crossSelling.produkt); setCrossSelling(null) }}
+            className="px-4 sm:px-5 py-2.5 sm:py-3 bg-baeckerei-accent text-white rounded-xl text-sm sm:text-base font-bold hover:bg-baeckerei-accent-hover active:scale-95 transition-all shadow-sm flex-shrink-0">
+            Ja, dazu!
+          </button>
+          <button onClick={() => setCrossSelling(null)}
+            className="text-purple-300 hover:text-purple-600 w-9 h-9 flex items-center justify-center flex-shrink-0 rounded-lg hover:bg-purple-100"><X size={18} /></button>
+        </div>
+      )}
 
       {/* Spacer auf Mobile damit Content nicht von der fixed Sprach-Leiste verdeckt wird */}
       <div className="md:hidden flex-shrink-0 h-[72px]" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }} />

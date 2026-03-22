@@ -1,4 +1,5 @@
 // UTE Logo – handgezeichnetes Croissant von Rebecca
+import { useState, useEffect } from 'react'
 
 export function UTELogo({ size = 40, showText = false, className = '' }) {
   return (
@@ -21,9 +22,24 @@ export function UTELogo({ size = 40, showText = false, className = '' }) {
 }
 
 // Größere Version für Login-Screen – Croissant als großer Hintergrund hinter der Schrift
+// Lazy-Load: Logo und Text faden sanft ein sobald das Bild geladen ist
 export function UTELogoLarge({ className = '' }) {
+  const [geladen, setGeladen] = useState(false)
+
+  useEffect(() => {
+    const img = new Image()
+    img.src = '/ute-logo.png'
+    img.onload = () => setGeladen(true)
+    // Falls das Bild bereits im Cache ist
+    if (img.complete) setGeladen(true)
+  }, [])
+
   return (
-    <div className={`relative flex flex-col items-center ${className}`}>
+    <div
+      className={`relative flex flex-col items-center transition-all duration-700 ease-out ${
+        geladen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+      } ${className}`}
+    >
       {/* Croissant als großes Hintergrund-Element – responsive skaliert */}
       <img
         src="/ute-logo.png"
