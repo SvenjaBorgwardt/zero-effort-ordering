@@ -940,7 +940,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
                 return (
                   <div key={produkt.id} className="relative">
                     <button onClick={() => produktHinzufuegen(produkt)}
-                      className={`w-full rounded-2xl border p-3.5 text-left transition-all flex flex-col justify-between min-h-[85px]
+                      className={`w-full rounded-2xl border p-3.5 text-left transition-all flex flex-col justify-between h-[110px]
                         ${istGesperrt
                           ? 'bg-gray-50 border-red-200 opacity-50'
                           : 'bg-white border-purple-100/60 hover:border-purple-400 hover:shadow-md active:bg-purple-50/50 shadow-sm'
