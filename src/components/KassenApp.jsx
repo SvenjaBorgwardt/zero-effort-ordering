@@ -857,7 +857,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
         <div className="flex items-center gap-3">
           <UTELogo size={44} />
           <div>
-            <h1 className="text-xl font-extrabold text-baeckerei-text tracking-tight">UTE Kasse</h1>
+            <h1 className="text-xl font-extrabold text-baeckerei-text tracking-tight" style={{ fontFamily: "'DM Sans', sans-serif" }}>UTE</h1>
             <p className="text-xs text-baeckerei-text-secondary font-medium">Hallo, {mitarbeiter?.name}</p>
           </div>
         </div>
