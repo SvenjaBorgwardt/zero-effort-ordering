@@ -12,8 +12,8 @@ export function UTELogo({ size = 40, showText = false, className = '' }) {
       />
       {showText && (
         <div className="flex flex-col">
-          <span className="text-lg font-bold tracking-tight" style={{ color: '#1E1B2E' }}>UTE</span>
-          <span className="text-[0.55em] opacity-60 -mt-1" style={{ color: '#1E1B2E' }}>Unkomplizierte Theken Eingabe</span>
+          <span className="text-lg font-bold tracking-tight" style={{ color: '#1A1333' }}>UTE</span>
+          <span className="text-[0.55em] opacity-60 -mt-1" style={{ color: '#1A1333' }}>Unkomplizierte Theken Eingabe</span>
         </div>
       )}
     </div>
@@ -25,8 +25,8 @@ export function UTELogoLarge({ className = '' }) {
   return (
     <div className={`flex flex-col items-center ${className}`}>
       <UTELogo size={280} />
-      <h2 className="text-7xl font-extrabold tracking-tight mt-4" style={{ color: '#1E1B2E' }}>UTE</h2>
-      <p className="text-2xl font-medium mt-1" style={{ color: '#6B6880' }}>Unkomplizierte Theken Eingabe</p>
+      <h2 className="text-7xl font-extrabold tracking-tight mt-4" style={{ color: '#1A1333' }}>UTE</h2>
+      <p className="text-2xl font-medium mt-1" style={{ color: '#6E6589' }}>Unkomplizierte Theken Eingabe</p>
     </div>
   )
 }
