@@ -21,16 +21,22 @@ const KATEGORIEN = [
 
 // Stammkunden (Daten von den Bäckerinnen)
 const STAMMKUNDEN = [
-  { id: 'sk1', name: 'Frau Mayer', spitzname: 'Der Herr Mayer', letzte: [
+  { id: 'sk1', name: 'Frau Mayer', spitzname: 'Der Herr Mayer',
+    varianten: ['mayer', 'maier', 'meier', 'meyer', 'maja', 'maia', 'frau mayer', 'frau maier', 'frau meier', 'frau meyer', 'herr mayer', 'herr maier', 'herr meier', 'herr meyer'],
+    letzte: [
     { produkt_id: 'weizenbroetchen', name: 'Weizenbrötchen', menge: 6, preis: 0.45 },
     { produkt_id: 'mohnbroetchen', name: 'Mohnbrötchen', menge: 2, preis: 0.50 },
     { produkt_id: 'mischbrot', name: 'Mischbrot', menge: 1, preis: 3.90 },
   ]},
-  { id: 'sk2', name: 'Frau Schmidt', spitzname: 'Die Frau Schmidt', allergie: 'Sesam', letzte: [
+  { id: 'sk2', name: 'Frau Schmidt', spitzname: 'Die Frau Schmidt', allergie: 'Sesam',
+    varianten: ['schmidt', 'schmitz', 'schmitt', 'schmid', 'schmidd', 'schmied', 'schmi', 'frau schmidt', 'frau schmitz', 'frau schmitt', 'frau schmid'],
+    letzte: [
     { produkt_id: 'croissant', name: 'Buttercroissant', menge: 2, preis: 1.80 },
     { produkt_id: 'dinkelbrot', name: 'Dinkelvollkornbrot', menge: 1, preis: 4.50 },
   ]},
-  { id: 'sk3', name: 'Frau Klein', letzte: [
+  { id: 'sk3', name: 'Frau Klein',
+    varianten: ['klein', 'klain', 'kline', 'klei', 'frau klein', 'frau klain'],
+    letzte: [
     { produkt_id: 'koernerbroetchen', name: 'Körnerbrötchen', menge: 4, preis: 0.55 },
     { produkt_id: 'rosinenschnecke', name: 'Rosinenschnecke', menge: 1, preis: 1.60 },
   ]},
@@ -235,14 +241,20 @@ function erkenneStammkunde(text, stammkunden) {
   if (!text || text.length < 5) return null
   const lower = text.toLowerCase()
   for (const kunde of stammkunden) {
-    // Name direkt suchen
+    // 1. Name direkt suchen
     if (lower.includes(kunde.name.toLowerCase())) return kunde
-    // Nachname extrahieren und suchen
+    // 2. Nachname extrahieren und suchen
     const teile = kunde.name.split(/\s+/)
     const nachname = teile[teile.length - 1].toLowerCase()
     if (nachname.length >= 3 && lower.includes(nachname)) return kunde
-    // Spitzname suchen
+    // 3. Spitzname suchen
     if (kunde.spitzname && lower.includes(kunde.spitzname.toLowerCase())) return kunde
+    // 4. Namensvarianten durchgehen (Speech-API-Fehler abfangen)
+    if (kunde.varianten) {
+      for (const variante of kunde.varianten) {
+        if (lower.includes(variante)) return kunde
+      }
+    }
   }
   return null
 }
