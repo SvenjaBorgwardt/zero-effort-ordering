@@ -384,6 +384,7 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
   const [stammkundePopup, setStammkundePopup] = useState(false)
   const [crossSelling, setCrossSelling] = useState(null) // null oder Produkt-Vorschlag
   const [teamSeite, setTeamSeite] = useState(false) // Team-Seite anzeigen
+  const [teamHinweis, setTeamHinweis] = useState(true) // Hinweis auf Team-Button
 
   // Allergen-Feature
   const [allergenInfo, setAllergenInfo] = useState(null) // null oder {produkt, ...}
@@ -414,6 +415,12 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
   const [neuerStammkundePopup, setNeuerStammkundePopup] = useState(false)
   const [neuerStammkundeName, setNeuerStammkundeName] = useState('')
   const [neuerStammkundeAllergie, setNeuerStammkundeAllergie] = useState('')
+
+  // Team-Hinweis nach 4 Sekunden ausblenden
+  useEffect(() => {
+    const timer = setTimeout(() => setTeamHinweis(false), 4000)
+    return () => clearTimeout(timer)
+  }, [])
 
   // Katalog laden (alle Produkte inkl. Getränke kommen jetzt aus dem Katalog)
   useEffect(() => {
@@ -910,17 +917,24 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
     <div className="h-screen bg-baeckerei-bg flex flex-col overflow-hidden">
       {/* ═══ HEADER ═══ */}
       <header className="border-b border-purple-300/30 px-3 sm:px-5 py-2 sm:py-2.5 flex items-center justify-between flex-shrink-0 shadow-sm" style={{ background: 'linear-gradient(135deg, #DDD6F3 0%, #D4CBF0 100%)' }}>
-        <button onClick={() => setTeamSeite(true)} className="flex items-center gap-2 sm:gap-3 px-2 py-1.5 -mx-2 -my-1.5 rounded-xl hover:bg-purple-200/40 active:bg-purple-200/60 transition-colors cursor-pointer group">
-          <UTELogo size={36} className="sm:hidden" />
-          <UTELogo size={44} className="hidden sm:flex" />
-          <div className="text-left">
-            <div className="flex items-center gap-1">
-              <h1 className="text-base sm:text-xl font-extrabold text-baeckerei-text tracking-tight group-hover:text-purple-600 transition-colors" style={{ fontFamily: "'DM Sans', sans-serif" }}>UTE</h1>
-              <ChevronRight size={16} className="text-purple-400 group-hover:text-purple-600 transition-colors" />
+        <div className="relative flex items-center">
+          <button onClick={() => { setTeamSeite(true); setTeamHinweis(false) }} className="flex items-center gap-2 sm:gap-3 px-2 py-1.5 -mx-2 -my-1.5 rounded-xl hover:bg-purple-200/40 active:bg-purple-200/60 transition-colors cursor-pointer group">
+            <UTELogo size={36} className="sm:hidden" />
+            <UTELogo size={44} className="hidden sm:flex" />
+            <div className="text-left">
+              <div className="flex items-center gap-1">
+                <h1 className="text-base sm:text-xl font-extrabold text-baeckerei-text tracking-tight group-hover:text-purple-600 transition-colors" style={{ fontFamily: "'DM Sans', sans-serif" }}>UTE</h1>
+                <ChevronRight size={16} className="text-purple-400 group-hover:text-purple-600 transition-colors" />
+              </div>
+              <p className="text-xs text-baeckerei-text-secondary font-medium">Hallo, {mitarbeiter?.name}</p>
             </div>
-            <p className="text-xs text-baeckerei-text-secondary font-medium">Hallo, {mitarbeiter?.name}</p>
+          </button>
+          {/* Hinweis-Tooltip */}
+          <div className={`absolute left-full ml-2 top-1/2 -translate-y-1/2 whitespace-nowrap bg-purple-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-lg transition-all duration-700 pointer-events-none ${teamHinweis ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2'}`}>
+            Unser Team kennenlernen
+            <div className="absolute right-full top-1/2 -translate-y-1/2 border-[6px] border-transparent border-r-purple-600" />
           </div>
-        </button>
+        </div>
         {/* Desktop: Buttons inline */}
         <div className="hidden md:flex items-center gap-3">
           <button onClick={() => setAllergenCheck(true)}
