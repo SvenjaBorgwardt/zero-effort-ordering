@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { Mic, MicOff, Check, X, AlertTriangle, User, ShoppingCart, Coffee, CreditCard, Banknote, Leaf, Info, Wheat, Egg, Milk, Bean, Nut, Fish, Shell, CircleAlert, Menu } from 'lucide-react'
+import { Mic, MicOff, Check, X, AlertTriangle, User, ShoppingCart, Coffee, CreditCard, Banknote, Leaf, Info, Wheat, Egg, Milk, Bean, Nut, Fish, Shell, CircleAlert, Menu, ChevronRight } from 'lucide-react'
 import { transkribiere, erkenneSprache, speichereKassenBestellung, ladeKatalog } from '../services/api'
 import { UTELogo } from './ute-logo'
 import TeamSeite from './TeamSeite'
@@ -910,14 +910,17 @@ export default function KassenApp({ mitarbeiter, onAbmelden }) {
     <div className="h-screen bg-baeckerei-bg flex flex-col overflow-hidden">
       {/* ═══ HEADER ═══ */}
       <header className="border-b border-purple-300/30 px-3 sm:px-5 py-2 sm:py-2.5 flex items-center justify-between flex-shrink-0 shadow-sm" style={{ background: 'linear-gradient(135deg, #DDD6F3 0%, #D4CBF0 100%)' }}>
-        <div className="flex items-center gap-2 sm:gap-3">
+        <button onClick={() => setTeamSeite(true)} className="flex items-center gap-2 sm:gap-3 px-2 py-1.5 -mx-2 -my-1.5 rounded-xl hover:bg-purple-200/40 active:bg-purple-200/60 transition-colors cursor-pointer group">
           <UTELogo size={36} className="sm:hidden" />
           <UTELogo size={44} className="hidden sm:flex" />
-          <div>
-            <h1 onClick={() => setTeamSeite(true)} className="text-base sm:text-xl font-extrabold text-baeckerei-text tracking-tight cursor-pointer hover:text-purple-600 transition-colors" style={{ fontFamily: "'DM Sans', sans-serif" }}>UTE</h1>
+          <div className="text-left">
+            <div className="flex items-center gap-1">
+              <h1 className="text-base sm:text-xl font-extrabold text-baeckerei-text tracking-tight group-hover:text-purple-600 transition-colors" style={{ fontFamily: "'DM Sans', sans-serif" }}>UTE</h1>
+              <ChevronRight size={16} className="text-purple-400 group-hover:text-purple-600 transition-colors" />
+            </div>
             <p className="text-xs text-baeckerei-text-secondary font-medium">Hallo, {mitarbeiter?.name}</p>
           </div>
-        </div>
+        </button>
         {/* Desktop: Buttons inline */}
         <div className="hidden md:flex items-center gap-3">
           <button onClick={() => setAllergenCheck(true)}
