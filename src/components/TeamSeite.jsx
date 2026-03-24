@@ -68,6 +68,11 @@ export default function TeamSeite({ onZurueck }) {
             onError={(e) => { e.target.style.display = 'none' }}
           />
 
+          {/* Hackathon-Hinweis */}
+          <p className="text-xs sm:text-sm text-purple-500 text-center -mb-4">
+            UTE wurde im Rahmen des BÄKO Hackathons vom 20.03.–22.03.26 von uns entwickelt.
+          </p>
+
           {/* Überschrift */}
           <h2 className="text-2xl sm:text-3xl font-extrabold text-purple-900 text-center" style={{ fontFamily: "'DM Sans', sans-serif" }}>
             Unser Team
