@@ -2,7 +2,7 @@
 
 **An AI-powered point-of-sale system for bakeries that understands natural conversation.**
 
-Built at the BAKO Hackathon (March 2025). UTE lets bakery staff take orders by simply talking to customers - no tapping, no searching, no scrolling. The register listens and does the rest.
+Built at the BAKO Hackathon (March 2026). UTE lets bakery staff take orders by simply talking to customers - no tapping, no searching, no scrolling. The register listens and does the rest.
 
 **[Live Demo](https://zero-effort-ordering.vercel.app)**
 
